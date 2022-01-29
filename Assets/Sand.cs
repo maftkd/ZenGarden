@@ -34,6 +34,10 @@ public class Sand : MonoBehaviour
 	Vector3 _hitPos;
 	public float _drawRadius;
 	public AnimationCurve _fallOff;
+	bool _penDown;
+	Vector2 _drawDir;
+	Vector3 _cursor;
+	public float _cursorLerp;
 
 	//audio
 	AudioSource _audio;
@@ -144,8 +148,8 @@ public class Sand : MonoBehaviour
 		//start drawing on mouse down
 		if(Input.GetMouseButtonDown(0)){
 			_drawing=true;
-			_prevPos=Input.mousePosition;
 			_sandParts.Play();
+			_penDown=true;
 		}
 		//stop drawing on mouse up
 		else if(Input.GetMouseButtonUp(0)){
@@ -160,108 +164,56 @@ public class Sand : MonoBehaviour
 			float t = -r.origin.y/r.direction.y;
 			float x = r.origin.x+t*r.direction.x;
 			float z = r.origin.z+t*r.direction.z;
-			//convert world space to local
 			Vector3 worldSpaceHit=new Vector3(x,0,z);
-			_hitPos=transform.InverseTransformPoint(worldSpaceHit);
+			//cursor snaps on pen down, but moves slower on draw
+			if(_penDown)
+			{
+				_cursor=worldSpaceHit;
+				_prevPos=_cursor;
+			}
+			else
+				_cursor=Vector3.Lerp(_cursor,worldSpaceHit,_cursorLerp*Time.deltaTime);
+			_hitPos=transform.InverseTransformPoint(_cursor);
 
 			//make sure point is within bounds
 			if(_hitPos.x>_xMin&&_hitPos.x<_xMax&&_hitPos.z>_zMin&&_hitPos.z<_zMax){
-				//determine vertex index closest to raycast hit
+				
+				//audio volume calc
+				Vector3 diff =_cursor-_prevPos;
+				//Vector3 mouseDiff=Input.mousePosition-_prevPos;
+				//float xDiff=mouseDiff.x/Screen.width;
+				float xDiff=diff.x/_size.x;
+				//float zDiff=mouseDiff.y/Screen.height;
+				float zDiff=diff.z/_size.y;
+				float normDist=Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
+				float vel = normDist/Time.deltaTime;
+				_targetVolume=vel/_maxVel;
+				_audio.volume=Mathf.Lerp(_audio.volume,_targetVolume,_audioSensitivity*Time.deltaTime);
+				_drawDir=new Vector2(xDiff,zDiff);
+				
+				//deform geometry
 				float xFrac = Mathf.InverseLerp(_xMin,_xMax,_hitPos.x);
 				float zFrac = Mathf.InverseLerp(_zMin,_zMax,_hitPos.z);
 				int xCoord=Mathf.FloorToInt((_vertsX-1)*xFrac);
 				int zCoord=Mathf.FloorToInt((_vertsZ-1)*zFrac);
 				int vertIndex=zCoord*_vertsX+xCoord;
-				//deform geometry
-				RaiseCircleFalloff(vertIndex,_drawRadius);
-				
-				//audio calc
-				Vector3 mouseDiff=Input.mousePosition-_prevPos;
-				float xDiff=Mathf.Abs(mouseDiff.x)/Screen.width;
-				float zDiff=Mathf.Abs(mouseDiff.y)/Screen.height;
-				float normDist=Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
-				float vel = normDist/Time.deltaTime;
-				_targetVolume=vel/_maxVel;
-				_audio.volume=Mathf.Lerp(_audio.volume,_targetVolume,_audioSensitivity*Time.deltaTime);
+				if(_penDown)
+					RaiseCircleFalloff(vertIndex,_drawRadius);
+				else if(normDist>0)
+					RaiseHalfCircleFalloff(vertIndex,_drawRadius,_drawDir);
 
-				_sandParts.transform.position=worldSpaceHit;
+				_sandParts.transform.position=_cursor;
 			}
 
-			_prevPos=Input.mousePosition;
+			_prevPos=_cursor;
+			if(_penDown)
+				_penDown=false;
 		}
 		else
 			_audio.volume=Mathf.Lerp(_audio.volume,0,_audioGravity*Time.deltaTime);
-        
     }
 
-	void RaiseVert(int vertIndex){
-		_verts[vertIndex].y=0.5f;
-		UpdateMeshData();
-	}
-
-	void RaiseRect(int vertIndex, float radius){
-		int xVerts=Mathf.FloorToInt(radius/_vertSpacing.x);
-		int zVerts=Mathf.FloorToInt(radius/_vertSpacing.y);
-		int rowNum=vertIndex/_vertsX;
-		int colNum=vertIndex%_vertsX;
-		int xMin=colNum-xVerts;
-		int xMax=colNum+xVerts;
-		int zMin=rowNum-zVerts;
-		int zMax=rowNum+zVerts;
-		//make sure rect doesn't go out of bounds
-		if(xMin<0)
-			xMin=0;
-		if(xMax>_vertsX-1)
-			xMax=_vertsX-1;
-		if(zMin<0)
-			zMin=0;
-		if(zMax>_vertsZ-1)
-			zMax=_vertsZ-1;
-
-		for(int z=zMin;z<=zMax;z++){
-			for(int x=xMin;x<=xMax;x++){
-				int vert=z*_vertsX+x;
-				_verts[vert].y=0.5f;
-			}
-		}
-		UpdateMeshData();
-	}
-
 	Vector3 _debugPos;
-	void RaiseCircle(int vertIndex, float radius){
-		int xVerts=Mathf.FloorToInt(radius/_vertSpacing.x);
-		int zVerts=Mathf.FloorToInt(radius/_vertSpacing.y);
-		int rowNum=vertIndex/_vertsX;
-		int colNum=vertIndex%_vertsX;
-		int xMin=colNum-xVerts;
-		int xMax=colNum+xVerts;
-		int zMin=rowNum-zVerts;
-		int zMax=rowNum+zVerts;
-		//make sure rect doesn't go out of bounds
-		if(xMin<0)
-			xMin=0;
-		if(xMax>_vertsX-1)
-			xMax=_vertsX-1;
-		if(zMin<0)
-			zMin=0;
-		if(zMax>_vertsZ-1)
-			zMax=_vertsZ-1;
-
-		for(int z=zMin;z<=zMax;z++){
-			float zDiff=Mathf.Abs(z-rowNum)*_vertSpacing.y;
-			for(int x=xMin;x<=xMax;x++){
-				float xDiff=Mathf.Abs(x-colNum)*_vertSpacing.x;
-				//good ol' pythagoras
-				float rad=Mathf.Sqrt(zDiff*zDiff+xDiff*xDiff);
-				if(rad<=radius){
-					int vert=z*_vertsX+x;
-					_verts[vert].y=0.5f;
-				}
-			}
-		}
-		_debugPos=_verts[vertIndex];
-		UpdateMeshData();
-	}
 
 	void RaiseCircleFalloff(int vertIndex, float radius){
 		int xVerts=Mathf.FloorToInt(radius/_vertSpacing.x);
@@ -317,11 +269,75 @@ public class Sand : MonoBehaviour
 		UpdateMeshData();
 	}
 
+	void RaiseHalfCircleFalloff(int vertIndex, float radius, Vector2 drawDir){
+		int xVerts=Mathf.FloorToInt(radius/_vertSpacing.x);
+		int zVerts=Mathf.FloorToInt(radius/_vertSpacing.y);
+		int rowNum=vertIndex/_vertsX;
+		int colNum=vertIndex%_vertsX;
+		int xMin=colNum-xVerts;
+		int xMax=colNum+xVerts;
+		int zMin=rowNum-zVerts;
+		int zMax=rowNum+zVerts;
+		//make sure rect doesn't go out of bounds
+		//there is an extra vertex surrounding the region so we can never modify the perimiter vertices
+		//this extra vertex is used when calcualting the normal
+		if(xMin<1)
+			xMin=1;
+		if(xMax>_vertsX-2)
+			xMax=_vertsX-2;
+		if(zMin<1)
+			zMin=1;
+		if(zMax>_vertsZ-2)
+			zMax=_vertsZ-2;
+
+		//modify vertex positions
+		int verts=0;
+		for(int z=zMin;z<=zMax;z++){
+			float zDiff=(z-rowNum)*_vertSpacing.y;
+			for(int x=xMin;x<=xMax;x++){
+				float xDiff=(x-colNum)*_vertSpacing.x;
+				//good ol' pythagoras
+				float rad=Mathf.Sqrt(zDiff*zDiff+xDiff*xDiff);
+				Vector2 dir = new Vector2(xDiff,zDiff);
+				float ang = Vector2.Angle(dir,drawDir);
+				//Debug.Log(ang);
+				if(rad<=radius&&ang<=90){
+					float fallOffT=rad/radius;
+					int vert=z*_vertsX+x;
+					_verts[vert].y=0.5f*(_fallOff.Evaluate(fallOffT)-1);
+					verts++;
+				}
+			}
+		}
+		//Debug.Break();
+		//Debug.Log("verts hit: "+verts+", draw dir: "+drawDir.normalized);
+
+		//update normals in region
+		for(int z=zMin;z<=zMax;z++){
+			for(int x=xMin;x<=xMax;x++){
+				int vert=z*_vertsX+x;
+				int left=vert-1;
+				int right=vert+1;
+				int below=vert-_vertsX;
+				int above=vert+_vertsX;
+				Vector3 xDiff=_verts[right]-_verts[left];
+				Vector3 zDiff=_verts[above]-_verts[below];
+				_norms[vert]=Vector3.Cross(zDiff,xDiff);
+			}
+		}
+		
+		_debugPos=_verts[vertIndex];
+		UpdateMeshData();
+	}
+
 
 	void OnDrawGizmos(){
 		Gizmos.color=Color.red;
 		Gizmos.DrawWireSphere(transform.TransformPoint(_hitPos),0.1f);
 		Gizmos.color=Color.blue;
 		Gizmos.DrawWireSphere(transform.TransformPoint(_debugPos),_drawRadius);
+		Gizmos.color=Color.magenta;
+		Gizmos.DrawWireSphere(_cursor,_drawRadius);
+		Gizmos.DrawRay(_cursor,new Vector3(_drawDir.x,0,_drawDir.y).normalized*5f);
 	}
 }
