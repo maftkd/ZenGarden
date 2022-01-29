@@ -33,6 +33,7 @@ public class Sand : MonoBehaviour
 	Camera _cam;
 	Vector3 _hitPos;
 	public float _drawRadius;
+	public float _drawDepth;
 	public AnimationCurve _fallOff;
 	bool _penDown;
 	Vector2 _drawDir;
@@ -52,6 +53,9 @@ public class Sand : MonoBehaviour
 	//vfx
 	public ParticleSystem _sandParts;
 
+	//patterns
+	public Material [] _patterns;
+
 	void Awake(){
 		Init();
 	}
@@ -66,6 +70,7 @@ public class Sand : MonoBehaviour
 		_audio.volume=0;
 		//generate initial mesh
 		GenerateMesh();
+		LoadPattern();
 	}
 
 
@@ -130,6 +135,32 @@ public class Sand : MonoBehaviour
 		}
 
 		_mesh = new Mesh();
+		UpdateMeshData();
+	}
+
+	void LoadPattern(){
+		Material patternMat = _patterns[Random.Range(0,_patterns.Length)];
+		Texture2D patternTex = (Texture2D)patternMat.GetTexture("_MainTex");
+		Color[] pixels = patternTex.GetPixels();
+		for(int z=0;z<_vertsZ; z++){
+			float normZ=z/(float)(_vertsZ-1);
+			int sampleY=Mathf.FloorToInt(normZ*patternTex.height);
+			if(sampleY>=patternTex.height)
+				sampleY=patternTex.height-1;
+			for(int x=0;x<_vertsX; x++){
+				int vertIndex=z*_vertsX+x;
+				float normX=x/(float)(_vertsX-1);
+				int sampleX=Mathf.FloorToInt(normX*patternTex.width);
+				if(sampleX>=patternTex.width)
+					sampleX=patternTex.width-1;
+				int colorIndex=sampleY*patternTex.width+sampleX;
+				float color=pixels[colorIndex].r;
+				float u = _uvs[vertIndex].x;
+				if(color>0.5f)
+					u+=1f;
+				_uvs[vertIndex].x=u;
+			}
+		}
 		UpdateMeshData();
 	}
 
@@ -246,7 +277,7 @@ public class Sand : MonoBehaviour
 				if(rad<=radius){
 					float fallOffT=rad/radius;
 					int vert=z*_vertsX+x;
-					_verts[vert].y=0.5f*(_fallOff.Evaluate(fallOffT)-1);
+					_verts[vert].y=_drawDepth*(_fallOff.Evaluate(fallOffT)-1);
 				}
 			}
 		}
@@ -304,7 +335,7 @@ public class Sand : MonoBehaviour
 				if(rad<=radius&&ang<=90){
 					float fallOffT=rad/radius;
 					int vert=z*_vertsX+x;
-					_verts[vert].y=0.5f*(_fallOff.Evaluate(fallOffT)-1);
+					_verts[vert].y=_drawDepth*(_fallOff.Evaluate(fallOffT)-1+0.5f);
 					verts++;
 				}
 			}
@@ -323,6 +354,11 @@ public class Sand : MonoBehaviour
 				Vector3 xDiff=_verts[right]-_verts[left];
 				Vector3 zDiff=_verts[above]-_verts[below];
 				_norms[vert]=Vector3.Cross(zDiff,xDiff);
+				//try swapping uvs
+				int randVert=Random.Range(zMin,zMax+1)*_vertsX+Random.Range(xMin,xMax+1);
+				float cur = _uvs[vert].x;
+				_uvs[vert].x=_uvs[randVert].x;
+				_uvs[randVert].x=cur;
 			}
 		}
 		
