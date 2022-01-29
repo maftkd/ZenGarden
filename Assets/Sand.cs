@@ -9,8 +9,6 @@
 //sits at a height of 0 in order for those ray-casts to work... Note also that they don't take any deformations of the mesh
 //into account...
 //
-//Currently this script controls an attached audio source, however, the audio system is probably going to change so this is
-//just temporary
 
 using System.Collections;
 using System.Collections.Generic;
@@ -41,14 +39,9 @@ public class Sand : MonoBehaviour
 	public float _cursorLerp;
 
 	//audio
-	AudioSource _audio;
+	public SandAudio _sandAudio;
 	public float _maxVel;
-	float _targetVolume;
 	Vector3 _prevPos;
-	[Tooltip("The lerp factor for audio volume to fall to zero when not drawing")]
-	public float _audioGravity;
-	[Tooltip("The lerp factor for audio volume to update while drawing")]
-	public float _audioSensitivity;
 
 	//vfx
 	public ParticleSystem _sandParts;
@@ -66,13 +59,10 @@ public class Sand : MonoBehaviour
 		_meshF=GetComponent<MeshFilter>();
 		_meshR=GetComponent<MeshRenderer>();
 		_cam=Camera.main;
-		_audio=GetComponent<AudioSource>();
-		_audio.volume=0;
 		//generate initial mesh
 		GenerateMesh();
 		LoadPattern();
 	}
-
 
 	Vector3[] _verts;
 	Vector3[] _norms;
@@ -205,6 +195,7 @@ public class Sand : MonoBehaviour
 			else
 				_cursor=Vector3.Lerp(_cursor,worldSpaceHit,_cursorLerp*Time.deltaTime);
 			_hitPos=transform.InverseTransformPoint(_cursor);
+			_sandAudio.SetPosition(_cursor);
 
 			//make sure point is within bounds
 			if(_hitPos.x>_xMin&&_hitPos.x<_xMax&&_hitPos.z>_zMin&&_hitPos.z<_zMax){
@@ -218,8 +209,8 @@ public class Sand : MonoBehaviour
 				float zDiff=diff.z/_size.y;
 				float normDist=Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
 				float vel = normDist/Time.deltaTime;
-				_targetVolume=vel/_maxVel;
-				_audio.volume=Mathf.Lerp(_audio.volume,_targetVolume,_audioSensitivity*Time.deltaTime);
+				float targetV=vel/_maxVel;
+				_sandAudio.SetTargetVolume(targetV);
 				_drawDir=new Vector2(xDiff,zDiff);
 				
 				//deform geometry
@@ -241,7 +232,9 @@ public class Sand : MonoBehaviour
 				_penDown=false;
 		}
 		else
-			_audio.volume=Mathf.Lerp(_audio.volume,0,_audioGravity*Time.deltaTime);
+			_sandAudio.SetTargetVolume(0);
+		//else
+			//_audio.volume=Mathf.Lerp(_audio.volume,0,_audioGravity*Time.deltaTime);
     }
 
 	Vector3 _debugPos;
@@ -344,6 +337,9 @@ public class Sand : MonoBehaviour
 		//Debug.Log("verts hit: "+verts+", draw dir: "+drawDir.normalized);
 
 		//update normals in region
+		//and uvs
+		float avgColor=0;
+		int totalCols=0;
 		for(int z=zMin;z<=zMax;z++){
 			for(int x=xMin;x<=xMax;x++){
 				int vert=z*_vertsX+x;
@@ -359,13 +355,21 @@ public class Sand : MonoBehaviour
 				float cur = _uvs[vert].x;
 				_uvs[vert].x=_uvs[randVert].x;
 				_uvs[randVert].x=cur;
+				avgColor+=Mathf.Floor(cur);
+				totalCols++;
 			}
 		}
+
+		avgColor/=totalCols;
+		_sandAudio.SetAverageColor(avgColor);
 		
 		_debugPos=_verts[vertIndex];
 		UpdateMeshData();
 	}
 
+	public float GetNormalizedZ(float z){
+		return Mathf.InverseLerp(_zMin,_zMax,z);
+	}
 
 	void OnDrawGizmos(){
 		Gizmos.color=Color.red;

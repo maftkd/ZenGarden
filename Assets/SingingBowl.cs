@@ -48,6 +48,7 @@ public class SingingBowl : MonoBehaviour
             mousePos.z = 8;
             mallet.transform.position = Camera.main.ScreenToWorldPoint(mousePos);
             mallet.transform.position = PlaceOnCircle(mallet.transform.position);
+
             float volCur = (previousPosition - mallet.transform.position).magnitude * boost;
             volSmoothed = Mathf.Lerp(volSmoothed,volCur,Time.deltaTime*volLerp);
             audioSource.volume = volSmoothed;
@@ -64,9 +65,9 @@ public class SingingBowl : MonoBehaviour
     private Vector3 PlaceOnCircle(Vector3 pos)
     {
         float angle = Mathf.Atan2(pos.z, pos.x) * Mathf.Rad2Deg;
-        pos.x = radius * Mathf.Cos(angle * Mathf.Deg2Rad);
-        pos.y = 0;
-        pos.z = radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+        pos.x = radius * Mathf.Cos(angle * Mathf.Deg2Rad) + transform.position.x;
+        pos.y = transform.position.y;
+        pos.z = radius * Mathf.Sin(angle * Mathf.Deg2Rad) + transform.position.z;
 
         return pos;
     }
