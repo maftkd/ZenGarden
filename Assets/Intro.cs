@@ -26,16 +26,35 @@ public class Intro : MonoBehaviour
 	public Material _space;
 	public float _spaceFadeDur;
 	public GameObject _sandbox;
+	public bool _skipIntro;
 
 	void Awake(){
-		_sandSound=_sa.GenerateSound(_sandAudioFreq);
-		_sandSound.transform.SetParent(transform);
+		if(!_skipIntro){
+			_sandSound=_sa.GenerateSound(_sandAudioFreq);
+			_sandSound.transform.SetParent(transform);
+		}
 	}
 
     // Start is called before the first frame update
     void Start()
     {
+		if(_skipIntro){
+			MeshRenderer [] mr = transform.GetComponentsInChildren<MeshRenderer>();
+			foreach(MeshRenderer m in mr)
+				m.enabled=false;
+			_overlay.alpha=0f;
+			_buttCover.alpha=0f;
+			_sandbox.SetActive(true);
+			_space.SetFloat("_Fade",0);
+			return;
+		}
+
 		_space.SetFloat("_Fade",1);
+		_sandbox.SetActive(false);
+		MeshRenderer [] mr2 = transform.GetComponentsInChildren<MeshRenderer>();
+		foreach(MeshRenderer m in mr2)
+			m.enabled=true;
+		_buttCover.alpha=1f;
 		StartCoroutine(IntroR());
 		StartCoroutine(SandFall());
     }

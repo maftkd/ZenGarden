@@ -6,7 +6,7 @@ using UnityEditor;
 
 public class Ship : EditorWindow
 {
-	[MenuItem("Build/Ship")]
+	[MenuItem("Build/Ship Web")]
 	public static void SendIt(){
 		Debug.Log("shipping");
 		//determine build path
@@ -16,7 +16,7 @@ public class Ship : EditorWindow
 			Directory.CreateDirectory(buildPath);
 		}
 		BuildPipeline.BuildPlayer(EditorBuildSettings.scenes, buildPath,BuildTarget.WebGL, BuildOptions.None);
-		string bat = "cd Butler\nbutler push "+buildPath+" rithmgaming/sandtest:HTML5";
+		string bat = "cd Butler\nbutler push "+buildPath+" rithmgaming/soul-sand:HTML5";
 
         string batPath = Directory.GetParent(Application.dataPath).FullName.Replace('\\','/')+"/Butler/ship.bat";
         File.WriteAllText(batPath, bat);

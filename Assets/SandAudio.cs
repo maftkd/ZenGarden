@@ -78,7 +78,6 @@ public class SandAudio : MonoBehaviour
     {
 		_actualVolume=Mathf.Lerp(_actualVolume,_targetVolume,_audioSensitivity*Time.deltaTime);
 		float z01 = _sand.GetNormalizedZ(transform.position.z);
-		Debug.Log("z: "+z01);
 		int curRegion=Mathf.FloorToInt(Mathf.Lerp(0,_frequencies.Length,z01));
 		if(curRegion>=_frequencies.Length)
 			curRegion=_frequencies.Length-1;

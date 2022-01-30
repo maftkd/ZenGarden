@@ -172,8 +172,16 @@ public class Sand : MonoBehaviour
     {
 		//start drawing on mouse down
 		if(Input.GetMouseButtonDown(0)&&!_help.IsActive()){
-			_drawing=true;
-			_penDown=true;
+			Ray r = _cam.ScreenPointToRay(Input.mousePosition);
+			//raycast to rocks
+			RaycastHit hit;
+			if(Physics.Raycast(r.origin,r.direction,out hit,50f,1)){
+				//
+			}
+			else{
+				_drawing=true;
+				_penDown=true;
+			}
 		}
 		//stop drawing on mouse up
 		else if(Input.GetMouseButtonUp(0)){
@@ -183,65 +191,75 @@ public class Sand : MonoBehaviour
 
 		//while mouse is down
 		if(_drawing){
-			//raycast to ground plane where y=0
 			Ray r = _cam.ScreenPointToRay(Input.mousePosition);
-			float t = -r.origin.y/r.direction.y;
-			float x = r.origin.x+t*r.direction.x;
-			float z = r.origin.z+t*r.direction.z;
-			Vector3 worldSpaceHit=new Vector3(x,0,z);
-			//cursor snaps on pen down, but moves slower on draw
-			if(_penDown)
-			{
-				_cursor=worldSpaceHit;
-				_prevPos=_cursor;
+			//raycast to rocks
+			RaycastHit hit;
+			if(Physics.Raycast(r.origin,r.direction,out hit,50f,1)){
+				_sandAudio.SetTargetVolume(0);
+				_sandParts.Stop();
+				//# hack
+				_penDown=true;
 			}
-			else
-				_cursor=Vector3.Lerp(_cursor,worldSpaceHit,_cursorLerp*Time.deltaTime);
-			_hitPos=transform.InverseTransformPoint(_cursor);
-			_sandAudio.SetPosition(_cursor);
-
-			//make sure point is within bounds
-			if(_hitPos.x>_xMin&&_hitPos.x<_xMax&&_hitPos.z>_zMin&&_hitPos.z<_zMax){
-
-				//audio volume calc
-				Vector3 diff =_cursor-_prevPos;
-				//Vector3 mouseDiff=Input.mousePosition-_prevPos;
-				//float xDiff=mouseDiff.x/Screen.width;
-				float xDiff=diff.x/_size.x;
-				//float zDiff=mouseDiff.y/Screen.height;
-				float zDiff=diff.z/_size.y;
-				float normDist=Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
-				float vel = normDist/Time.deltaTime;
-				float targetV=vel/_maxVel;
-				_sandAudio.SetTargetVolume(targetV);
-				_drawDir=new Vector2(xDiff,zDiff);
-				
-				//deform geometry
-				float xFrac = Mathf.InverseLerp(_xMin,_xMax,_hitPos.x);
-				float zFrac = Mathf.InverseLerp(_zMin,_zMax,_hitPos.z);
-				int xCoord=Mathf.FloorToInt((_vertsX-1)*xFrac);
-				int zCoord=Mathf.FloorToInt((_vertsZ-1)*zFrac);
-				int vertIndex=zCoord*_vertsX+xCoord;
+			else{
+				//raycast to ground plane where y=0
+				float t = -r.origin.y/r.direction.y;
+				float x = r.origin.x+t*r.direction.x;
+				float z = r.origin.z+t*r.direction.z;
+				Vector3 worldSpaceHit=new Vector3(x,0,z);
+				//cursor snaps on pen down, but moves slower on draw
 				if(_penDown)
 				{
-					_sandParts.Play();
-					RaiseCircleFalloff(vertIndex,_drawRadius);
-				}
-				else if(normDist>_minDistToUpdate)
-				{
-					if(!_sandParts.isPlaying)
-						_sandParts.Play();
-					RaiseHalfCircleFalloff(vertIndex,_drawRadius,_drawDir);
+					_cursor=worldSpaceHit;
+					_prevPos=_cursor;
 				}
 				else
-					_sandParts.Stop();
+					_cursor=Vector3.Lerp(_cursor,worldSpaceHit,_cursorLerp*Time.deltaTime);
+				_hitPos=transform.InverseTransformPoint(_cursor);
+				_sandAudio.SetPosition(_cursor);
 
-				_sandParts.transform.position=_cursor;
+				//make sure point is within bounds
+				if(_hitPos.x>_xMin&&_hitPos.x<_xMax&&_hitPos.z>_zMin&&_hitPos.z<_zMax){
+
+					//audio volume calc
+					Vector3 diff =_cursor-_prevPos;
+					//Vector3 mouseDiff=Input.mousePosition-_prevPos;
+					//float xDiff=mouseDiff.x/Screen.width;
+					float xDiff=diff.x/_size.x;
+					//float zDiff=mouseDiff.y/Screen.height;
+					float zDiff=diff.z/_size.y;
+					float normDist=Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
+					float vel = normDist/Time.deltaTime;
+					float targetV=vel/_maxVel;
+					_sandAudio.SetTargetVolume(targetV);
+					_drawDir=new Vector2(xDiff,zDiff);
+					
+					//deform geometry
+					float xFrac = Mathf.InverseLerp(_xMin,_xMax,_hitPos.x);
+					float zFrac = Mathf.InverseLerp(_zMin,_zMax,_hitPos.z);
+					int xCoord=Mathf.FloorToInt((_vertsX-1)*xFrac);
+					int zCoord=Mathf.FloorToInt((_vertsZ-1)*zFrac);
+					int vertIndex=zCoord*_vertsX+xCoord;
+					if(_penDown)
+					{
+						_sandParts.Play();
+						RaiseCircleFalloff(vertIndex,_drawRadius);
+					}
+					else if(normDist>_minDistToUpdate)
+					{
+						if(!_sandParts.isPlaying)
+							_sandParts.Play();
+						RaiseHalfCircleFalloff(vertIndex,_drawRadius,_drawDir);
+					}
+					else
+						_sandParts.Stop();
+
+					_sandParts.transform.position=_cursor;
+				}
+				_prevPos=_cursor;
+				if(_penDown)
+					_penDown=false;
 			}
 
-			_prevPos=_cursor;
-			if(_penDown)
-				_penDown=false;
 		}
 		else
 			_sandAudio.SetTargetVolume(0);
@@ -381,6 +399,10 @@ public class Sand : MonoBehaviour
 
 	public float GetNormalizedZ(float z){
 		return Mathf.InverseLerp(_zMin,_zMax,z);
+	}
+
+	public bool WithinBox(Vector3 v,float buffer){
+		return (v.x>_xMin+buffer&&v.x<_xMax-buffer&&v.z>_zMin+buffer&&v.z<_zMax-buffer);
 	}
 
 	void OnDrawGizmos(){
