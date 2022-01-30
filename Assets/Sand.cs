@@ -471,7 +471,7 @@ public class Sand : MonoBehaviour
 	}
 
 	public bool WithinBox(Vector3 v,float buffer){
-		return (v.x>_xMin+buffer&&v.x<_xMax-buffer&&v.z>_zMin+buffer&&v.z<_zMax-buffer);
+		return (v.x>_xMin+buffer&&v.x<_xMax-buffer&&v.z>_zMin+buffer*2&&v.z<_zMax+buffer);
 	}
 
 	public void Level(float amount){

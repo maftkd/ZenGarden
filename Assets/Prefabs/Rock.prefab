@@ -378,9 +378,9 @@ ParticleSystem:
         m_NumAlphaKeys: 2
     startSize:
       serializedVersion: 2
-      minMaxState: 0
-      scalar: 1
-      minScalar: 1
+      minMaxState: 3
+      scalar: 0.3
+      minScalar: 0.1
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -5014,6 +5014,21 @@ MonoBehaviour:
   _maxEmission: 2.5
   _chargeRate: 1
   _lightOffset: 1
+  _plops:
+  - {fileID: 8300000, guid: 865c4ec218926e349848db103227df9d, type: 3}
+  - {fileID: 8300000, guid: 89bea87de21cba74b903b63307e292fb, type: 3}
+  - {fileID: 8300000, guid: bc55dfb09ec15514288bb5960708511e, type: 3}
+  - {fileID: 8300000, guid: 33766127d6e6fbc40a369285355b1b4b, type: 3}
+  - {fileID: 8300000, guid: b11e8d7e4fcbaeb408b8c7c57de0c29d, type: 3}
+  _sustain:
+  - {fileID: 8300000, guid: 62dd8922919fe7a45ac2b95c49132306, type: 3}
+  - {fileID: 8300000, guid: 01a96662eedc50e4db11cc743698a62e, type: 3}
+  - {fileID: 8300000, guid: 51f0716e1ad6b1e44aa25d1bc2121068, type: 3}
+  - {fileID: 8300000, guid: 3ce1aabe86dfc874aa22de860ca2bdb4, type: 3}
+  - {fileID: 8300000, guid: 2dfaafe480b0d584693d97bff3ea4c12, type: 3}
+  _sustainDecay: 2
+  _thumpVol: 1
+  _sustainVol: 1
 --- !u!64 &4650931476129403684
 MeshCollider:
   m_ObjectHideFlags: 0

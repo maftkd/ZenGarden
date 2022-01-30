@@ -20,8 +20,7 @@ public class Intro : MonoBehaviour
 	public float _sandFadeOutDur;
 	public float _flipDur;
 	public AnimationCurve _flipCurve;
-	public AudioSource _music;
-	public float _musicVol;
+	public MusicPlayer _music;
 	public CanvasGroup _buttCover;
 	public Material _space;
 	public float _spaceFadeDur;
@@ -49,6 +48,8 @@ public class Intro : MonoBehaviour
 			_sandParts.Stop();
 			_space.SetFloat("_Fade",0);
 			_bowl.SetActive(true);
+			_music.StartPlaying();
+			_atmosphere.volume=1f;
 			return;
 		}
 
@@ -123,10 +124,11 @@ public class Intro : MonoBehaviour
 		botMat.SetFloat("_FillAmount",0);
 		topMat.SetFloat("_Flip",0);
 		topMat.SetFloat("_FillAmount",0);
+		_music.StartPlaying();
 		while(timer<_fadeInDur){
 			timer+=Time.deltaTime;
 			_overlay.alpha=(timer/_fadeInDur);
-			_music.volume=timer/_fadeInDur*_musicVol;
+			//_music.volume=timer/_fadeInDur*_musicVol;
 			botMat.SetFloat("_FillAmount",timer/_sandFallTime);
 			topMat.SetFloat("_FillAmount",timer/_sandFallTime);
 			yield return null;

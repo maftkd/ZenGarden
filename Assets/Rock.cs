@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class Rock : MonoBehaviour
 {
@@ -23,6 +24,13 @@ public class Rock : MonoBehaviour
 	Light _light;
 	public float _lightOffset;
 	ParticleSystem _parts;
+	public AudioClip [] _plops;
+	public AudioClip [] _sustain;
+	AudioSource _source;
+	public float _sustainDecay;
+	int _sourceIndex;
+	public float _thumpVol;
+	public float _sustainVol;
 
 	void Awake(){
 		Vector3 eulers = Random.insideUnitSphere*360f;
@@ -49,6 +57,9 @@ public class Rock : MonoBehaviour
 		_parts=transform.GetComponentInChildren<ParticleSystem>();
 		ParticleSystem.MainModule main = _parts.main;
 		main.startColor=c;
+
+		_sourceIndex = Random.Range(0,_sustain.Length);
+		//_mixer
 	}
 
     // Start is called before the first frame update
@@ -70,6 +81,12 @@ public class Rock : MonoBehaviour
 				transform.position=worldSpaceHit;
 
 				if(Input.GetMouseButtonDown(0)){
+					/*
+					t=-r.origin.y/r.direction.y;
+					x=r.origin.x+t*r.direction.x;
+					z=r.origin.z+t*r.direction.z;
+					Vector3 pos = new Vector3(x,0,z);
+					*/
 					if(_sand.WithinBox(transform.position,_buffer)){
 						StartCoroutine(Place());
 					}
@@ -80,6 +97,11 @@ public class Rock : MonoBehaviour
 					if(!_light.enabled){
 						_light.enabled=true;
 						_parts.Play();
+						if(_source!=null)
+							StartCoroutine(FadeOutSource(_source));
+						_source = Sfx.PlayOneShot3D(_sustain[_sourceIndex],transform.position);
+						_source.volume=_sustainVol;
+						//_source.outputAudioMixerGroup = _mixer.FindMatchingGroups(_mixerName)[0];
 					}
 					if(_emission<_maxEmission){
 						_emission+=Time.deltaTime*_chargeRate;
@@ -103,6 +125,9 @@ public class Rock : MonoBehaviour
 							_light.enabled=false;
 						}
 					}
+					if(_source!=null&&_source.volume>0){
+						_source.volume=Mathf.Lerp(_source.volume,0,Time.deltaTime*_sustainDecay);
+					}
 				}
 				break;
 			default:
@@ -122,7 +147,9 @@ public class Rock : MonoBehaviour
 			transform.position=Vector3.Lerp(startPos,endPos,timer/_placeDur);
 			yield return null;
 		}
-		Sfx.PlayOneShot3D(_hitAudio,transform.position);
+		AudioSource s = Sfx.PlayOneShot3D(_plops[Random.Range(0,_plops.Length)],transform.position);
+		s.volume=_thumpVol;
+		//s.outputAudioMixerGroup = _mixer.FindMatchingGroups(_mixerName)[0];
 		Instantiate(_dustParts,transform.position,Quaternion.identity);
 		_light.transform.position=transform.position+Vector3.up*_lightOffset;
 	}
@@ -140,6 +167,13 @@ public class Rock : MonoBehaviour
 	void StopCharging(){
 		_charging=false;
 		_parts.Stop();
+	}
 
+	IEnumerator FadeOutSource(AudioSource s){
+		while(s!=null&&s.volume>0)
+		{
+			s.volume=Mathf.Lerp(s.volume,0,Time.deltaTime*_sustainDecay);
+			yield return null;
+		}
 	}
 }
