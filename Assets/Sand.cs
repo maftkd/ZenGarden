@@ -49,6 +49,7 @@ public class Sand : MonoBehaviour
 
 	//patterns
 	public Material [] _patterns;
+	int _lastPattern;
 
 	Help _help;
 
@@ -132,7 +133,75 @@ public class Sand : MonoBehaviour
 		UpdateMeshData();
 	}
 
+	Vector2[] _uvCache;
+	public void CacheLastPattern(){
+		Material patternMat = _patterns[_lastPattern];
+		Texture2D patternTex = (Texture2D)patternMat.GetTexture("_MainTex");
+		Color[] pixels = patternTex.GetPixels();
+		if(_uvCache==null)
+			_uvCache=new Vector2[_uvs.Length];
+		for(int z=0;z<_vertsZ; z++){
+			float normZ=z/(float)(_vertsZ-1);
+			int sampleY=Mathf.FloorToInt(normZ*patternTex.height);
+			if(sampleY>=patternTex.height)
+				sampleY=patternTex.height-1;
+			for(int x=0;x<_vertsX; x++){
+				int vertIndex=z*_vertsX+x;
+				float normX=x/(float)(_vertsX-1);
+				int sampleX=Mathf.FloorToInt(normX*patternTex.width);
+				if(sampleX>=patternTex.width)
+					sampleX=patternTex.width-1;
+				int colorIndex=sampleY*patternTex.width+sampleX;
+				float color=pixels[colorIndex].r;
+				float u = normX;
+				if(color>0.5f)
+					u+=1f;
+				_uvCache[vertIndex].x=u;
+				_uvCache[vertIndex].y=normZ;
+			}
+		}
+	}
+
+	public void CacheNextPattern(){
+		//go next pattern
+		_lastPattern++;
+		if(_lastPattern>=_patterns.Length)
+			_lastPattern=0;
+		Material patternMat = _patterns[_lastPattern];
+		Texture2D patternTex = (Texture2D)patternMat.GetTexture("_MainTex");
+		Color[] pixels = patternTex.GetPixels();
+		if(_uvCache==null)
+			_uvCache=new Vector2[_uvs.Length];
+		for(int z=0;z<_vertsZ; z++){
+			float normZ=z/(float)(_vertsZ-1);
+			int sampleY=Mathf.FloorToInt(normZ*patternTex.height);
+			if(sampleY>=patternTex.height)
+				sampleY=patternTex.height-1;
+			for(int x=0;x<_vertsX; x++){
+				int vertIndex=z*_vertsX+x;
+				float normX=x/(float)(_vertsX-1);
+				int sampleX=Mathf.FloorToInt(normX*patternTex.width);
+				if(sampleX>=patternTex.width)
+					sampleX=patternTex.width-1;
+				int colorIndex=sampleY*patternTex.width+sampleX;
+				float color=pixels[colorIndex].r;
+				float u = normX;
+				if(color>0.5f)
+					u+=1f;
+				_uvCache[vertIndex].x=u;
+				_uvCache[vertIndex].y=normZ;
+			}
+		}
+	}
+
+	public void LoadNextPattern(){
+		_lastPattern++;
+		if(_lastPattern>=_patterns.Length)
+			_lastPattern=0;
+		LoadPattern(_lastPattern);
+	}
 	public void LoadPattern(int index){
+		_lastPattern=index;
 		Material patternMat = _patterns[index];
 		Texture2D patternTex = (Texture2D)patternMat.GetTexture("_MainTex");
 		Color[] pixels = patternTex.GetPixels();
@@ -149,7 +218,7 @@ public class Sand : MonoBehaviour
 					sampleX=patternTex.width-1;
 				int colorIndex=sampleY*patternTex.width+sampleX;
 				float color=pixels[colorIndex].r;
-				float u = _uvs[vertIndex].x;
+				float u = normX;
 				if(color>0.5f)
 					u+=1f;
 				_uvs[vertIndex].x=u;
@@ -158,7 +227,7 @@ public class Sand : MonoBehaviour
 		UpdateMeshData();
 	}
 
-	void UpdateMeshData(){
+	public void UpdateMeshData(){
 		_mesh.vertices=_verts;
 		_mesh.triangles=_tris;
 		_mesh.uv=_uvs;
@@ -403,6 +472,30 @@ public class Sand : MonoBehaviour
 
 	public bool WithinBox(Vector3 v,float buffer){
 		return (v.x>_xMin+buffer&&v.x<_xMax-buffer&&v.z>_zMin+buffer&&v.z<_zMax-buffer);
+	}
+
+	public void Level(float amount){
+		for(int z=0; z<_vertsZ;z++)
+		{
+			for(int x=0; x<_vertsX; x++){
+				int vertIndex=z*_vertsX+x;
+				Vector3 cur = _verts[vertIndex];
+				Vector3 target=cur;
+				target.y=0;
+				_verts[vertIndex]=Vector3.Lerp(cur,target,amount);
+				cur=_norms[vertIndex];
+				_norms[vertIndex]=Vector3.Lerp(cur,Vector3.up,amount);
+			}
+		}
+	}
+
+	public void BlendToCachedPattern(float amount){
+		for(int z=0; z<_vertsZ;z++){
+			for(int x=0; x<_vertsX; x++){
+				int vertIndex=z*_vertsX+x;
+				_uvs[vertIndex]=Vector2.Lerp(_uvs[vertIndex],_uvCache[vertIndex],amount);
+			}
+		}
 	}
 
 	void OnDrawGizmos(){

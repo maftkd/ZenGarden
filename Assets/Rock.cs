@@ -22,6 +22,7 @@ public class Rock : MonoBehaviour
 	public float _chargeRate;
 	Light _light;
 	public float _lightOffset;
+	ParticleSystem _parts;
 
 	void Awake(){
 		Vector3 eulers = Random.insideUnitSphere*360f;
@@ -44,6 +45,10 @@ public class Rock : MonoBehaviour
 		_mat.SetColor("_EmissionColor",c);
 		_light=transform.GetComponentInChildren<Light>();
 		_light.color=c;
+
+		_parts=transform.GetComponentInChildren<ParticleSystem>();
+		ParticleSystem.MainModule main = _parts.main;
+		main.startColor=c;
 	}
 
     // Start is called before the first frame update
@@ -74,6 +79,7 @@ public class Rock : MonoBehaviour
 				if(_charging){
 					if(!_light.enabled){
 						_light.enabled=true;
+						_parts.Play();
 					}
 					if(_emission<_maxEmission){
 						_emission+=Time.deltaTime*_chargeRate;
@@ -93,7 +99,9 @@ public class Rock : MonoBehaviour
 					}
 					else{
 						if(_light.enabled)
+						{
 							_light.enabled=false;
+						}
 					}
 				}
 				break;
@@ -123,9 +131,15 @@ public class Rock : MonoBehaviour
 		if(Input.GetMouseButton(0))
 			_charging=true;
 		else
-			_charging=false;
+			StopCharging();
 	}
 	void OnMouseExit(){
+		StopCharging();
+	}
+
+	void StopCharging(){
 		_charging=false;
+		_parts.Stop();
+
 	}
 }

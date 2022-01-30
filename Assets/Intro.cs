@@ -27,6 +27,7 @@ public class Intro : MonoBehaviour
 	public float _spaceFadeDur;
 	public GameObject _sandbox;
 	public bool _skipIntro;
+	public GameObject _bowl;
 
 	void Awake(){
 		if(!_skipIntro){
@@ -47,11 +48,13 @@ public class Intro : MonoBehaviour
 			_sandbox.SetActive(true);
 			_sandParts.Stop();
 			_space.SetFloat("_Fade",0);
+			_bowl.SetActive(true);
 			return;
 		}
 
 		_space.SetFloat("_Fade",1);
 		_sandbox.SetActive(false);
+		_bowl.SetActive(false);
 		MeshRenderer [] mr2 = transform.GetComponentsInChildren<MeshRenderer>();
 		foreach(MeshRenderer m in mr2)
 			m.enabled=true;
@@ -83,6 +86,12 @@ public class Intro : MonoBehaviour
 		topMat.SetFloat("_FillAmount",0);
 		topMat.SetFloat("_Flip",1);
 
+		var col = _sandParts.colorOverLifetime;
+		Gradient grad = new Gradient();
+		grad.SetKeys(new GradientColorKey[] { new GradientColorKey(_sandDark, 0.0f), new GradientColorKey(_sandLight, 0.5f) }, 
+				new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) } );
+		col.color=grad;
+
 		float timer=0;
 		while(timer<_sandFallTime){
 			timer+=Time.deltaTime;
@@ -103,23 +112,34 @@ public class Intro : MonoBehaviour
 			float t = _flipCurve.Evaluate(timer/_flipDur);
 			transform.rotation=Quaternion.Slerp(curRot,endRot,t);
 			botMat.SetColor("_Color",Color.Lerp(_sandLight,_sandDark,t));
+			topMat.SetColor("_Color",Color.Lerp(_sandDark,_sandLight,t));
 			yield return null;
 		}
 
 		timer=0;
+		_sandParts.transform.Rotate(Vector3.up*180);
+		_sandParts.Play();
+		botMat.SetFloat("_Flip",1);
+		botMat.SetFloat("_FillAmount",0);
+		topMat.SetFloat("_Flip",0);
+		topMat.SetFloat("_FillAmount",0);
 		while(timer<_fadeInDur){
 			timer+=Time.deltaTime;
 			_overlay.alpha=(timer/_fadeInDur);
 			_music.volume=timer/_fadeInDur*_musicVol;
+			botMat.SetFloat("_FillAmount",timer/_sandFallTime);
+			topMat.SetFloat("_FillAmount",timer/_sandFallTime);
 			yield return null;
 		}
 
+		_sandParts.Stop();
 		_overlay.alpha=1f;
 		bot.enabled=false;
 		top.enabled=false;
 		GetComponent<MeshRenderer>().enabled=false;
 		_buttCover.alpha=0f;
 		_sandbox.SetActive(true);
+		_bowl.SetActive(true);
 
 		timer=0;
 		while(timer<_fadeInDur){
