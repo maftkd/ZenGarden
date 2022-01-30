@@ -35,11 +35,12 @@ public class SandAudio : MonoBehaviour
 		for(int i=0; i<_frequencies.Length; i++)
 		{
 			_sources[i]=GenerateSound(_frequencies[i]);
+			_sources[i].transform.SetParent(transform);
 			_filters[i]=_sources[i].GetComponent<AudioLowPassFilter>();
 		}
 	}
 
-	AudioSource GenerateSound(float frequency){
+	public AudioSource GenerateSound(float frequency){
 		float cycleDur=1f/frequency;
 		_numCycles=Mathf.FloorToInt(frequency);
 		_duration=cycleDur*_numCycles;
@@ -56,7 +57,6 @@ public class SandAudio : MonoBehaviour
 		AudioClip clip = AudioClip.Create("noise",numSamples,1,_sampleRate,false);
 		clip.SetData(samples,0);
 		GameObject source = new GameObject("Source-"+frequency.ToString("0.0"));
-		source.transform.SetParent(transform);
 		AudioSource audio = source.AddComponent<AudioSource>();
 		AudioLowPassFilter lp = source.AddComponent<AudioLowPassFilter>();
 		audio.clip=clip;

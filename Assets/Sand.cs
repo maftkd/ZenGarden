@@ -37,6 +37,7 @@ public class Sand : MonoBehaviour
 	Vector2 _drawDir;
 	Vector3 _cursor;
 	public float _cursorLerp;
+	public float _minDistToUpdate;
 
 	//audio
 	public SandAudio _sandAudio;
@@ -49,6 +50,8 @@ public class Sand : MonoBehaviour
 	//patterns
 	public Material [] _patterns;
 
+	Help _help;
+
 	void Awake(){
 		Init();
 	}
@@ -59,9 +62,10 @@ public class Sand : MonoBehaviour
 		_meshF=GetComponent<MeshFilter>();
 		_meshR=GetComponent<MeshRenderer>();
 		_cam=Camera.main;
+		_help=FindObjectOfType<Help>();
 		//generate initial mesh
 		GenerateMesh();
-		LoadPattern();
+		LoadPattern(0);
 	}
 
 	Vector3[] _verts;
@@ -128,8 +132,8 @@ public class Sand : MonoBehaviour
 		UpdateMeshData();
 	}
 
-	void LoadPattern(){
-		Material patternMat = _patterns[Random.Range(0,_patterns.Length)];
+	public void LoadPattern(int index){
+		Material patternMat = _patterns[index];
 		Texture2D patternTex = (Texture2D)patternMat.GetTexture("_MainTex");
 		Color[] pixels = patternTex.GetPixels();
 		for(int z=0;z<_vertsZ; z++){
@@ -167,9 +171,8 @@ public class Sand : MonoBehaviour
     void Update()
     {
 		//start drawing on mouse down
-		if(Input.GetMouseButtonDown(0)){
+		if(Input.GetMouseButtonDown(0)&&!_help.IsActive()){
 			_drawing=true;
-			_sandParts.Play();
 			_penDown=true;
 		}
 		//stop drawing on mouse up
@@ -199,7 +202,7 @@ public class Sand : MonoBehaviour
 
 			//make sure point is within bounds
 			if(_hitPos.x>_xMin&&_hitPos.x<_xMax&&_hitPos.z>_zMin&&_hitPos.z<_zMax){
-				
+
 				//audio volume calc
 				Vector3 diff =_cursor-_prevPos;
 				//Vector3 mouseDiff=Input.mousePosition-_prevPos;
@@ -220,9 +223,18 @@ public class Sand : MonoBehaviour
 				int zCoord=Mathf.FloorToInt((_vertsZ-1)*zFrac);
 				int vertIndex=zCoord*_vertsX+xCoord;
 				if(_penDown)
+				{
+					_sandParts.Play();
 					RaiseCircleFalloff(vertIndex,_drawRadius);
-				else if(normDist>0)
+				}
+				else if(normDist>_minDistToUpdate)
+				{
+					if(!_sandParts.isPlaying)
+						_sandParts.Play();
 					RaiseHalfCircleFalloff(vertIndex,_drawRadius,_drawDir);
+				}
+				else
+					_sandParts.Stop();
 
 				_sandParts.transform.position=_cursor;
 			}

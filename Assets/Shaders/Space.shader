@@ -10,6 +10,7 @@ Shader "Skybox/Space"
 		_TimeMult ("time mult", Float) = 0.1
 		_ColorStartY ("Color start y", Float) = 1
 		_ColorEndY ("Color end y", Float) = 1
+		_Fade ("Fade", Range(0,1)) = 0
     }
     SubShader
     {
@@ -58,6 +59,7 @@ Shader "Skybox/Space"
 			fixed _TimeMult;
 			fixed _ColorStartY;
 			fixed _ColorEndY;
+			fixed _Fade;
 
             fixed4 frag (v2f i) : SV_Target
             {
@@ -66,6 +68,7 @@ Shader "Skybox/Space"
 				fixed eye = i.eye.y;
 				starCol=lerp(_Sky,starCol,smoothstep(_ColorStartY,_ColorEndY,eye));
 				col=lerp(starCol,_Sky,1-step(_StarThresh,col.r));
+				col=lerp(col,fixed4(0,0,0,1),_Fade);
                 return col;
             }
             ENDCG
