@@ -45,6 +45,7 @@ public class Intro : MonoBehaviour
 			_overlay.alpha=0f;
 			_buttCover.alpha=0f;
 			_sandbox.SetActive(true);
+			_sandParts.Stop();
 			_space.SetFloat("_Fade",0);
 			return;
 		}
@@ -113,13 +114,21 @@ public class Intro : MonoBehaviour
 			yield return null;
 		}
 
+		_overlay.alpha=1f;
 		bot.enabled=false;
 		top.enabled=false;
 		GetComponent<MeshRenderer>().enabled=false;
-		_overlay.alpha=0f;
 		_buttCover.alpha=0f;
-
 		_sandbox.SetActive(true);
+
+		timer=0;
+		while(timer<_fadeInDur){
+			timer+=Time.deltaTime;
+			_overlay.alpha=1-timer/_fadeInDur;
+			yield return null;
+		}
+		_overlay.alpha=0f;
+
 
 		timer=0;
 		while(timer<_spaceFadeDur){

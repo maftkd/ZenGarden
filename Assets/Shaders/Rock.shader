@@ -49,8 +49,8 @@ Shader "Custom/Rock"
             fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
             o.Albedo = c.rgb;
             // Metallic and smoothness come from slider variables
-            o.Metallic = _Metallic;
-            o.Smoothness = _Glossiness;
+            o.Metallic = _Metallic*c.r;
+            o.Smoothness = _Glossiness*c.r*2;
 			fixed glow = step(_GlowThresh,c.r);
 			o.Emission=_Emission*c.r*_EmissionColor*glow;
             o.Alpha = c.a;

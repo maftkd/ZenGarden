@@ -48,6 +48,7 @@ Shader "Custom/Rim"
             o.Albedo = c.rgb;
 			float dt = dot(IN.worldNormal,IN.viewDir);
 			float solid=step(0,_Rim-dt);
+			//clip(_Rim-dt);
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
@@ -55,5 +56,4 @@ Shader "Custom/Rim"
         }
         ENDCG
     }
-    FallBack "Diffuse"
 }
