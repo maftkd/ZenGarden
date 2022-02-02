@@ -142,12 +142,13 @@ public class SingingBowl : MonoBehaviour
 			_sand.BlendToCachedPattern(level);
 			_sand.UpdateMeshData();
 			foreach(Rock r in rocks){
-				r.transform.position+=Vector3.down*Time.deltaTime*_rockFallSpeed;
+				if(r.OnBoard())
+					r.transform.position+=Vector3.down*Time.deltaTime*_rockFallSpeed;
 			}
 			yield return null;
 		}
 		for(int i=rocks.Length-1; i>=0;i--)
-			Destroy(rocks[i].gameObject);
+			rocks[i].Reset();
 		_glowMat.SetFloat("_Emission",0);
 		_source.volume=0;
 		_source.Stop();

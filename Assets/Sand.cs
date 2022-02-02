@@ -248,9 +248,9 @@ public class Sand : MonoBehaviour
 				//
 			}
 			else{
-				_drawing=true;
 				_penDown=true;
 			}
+			_drawing=true;
 		}
 		//stop drawing on mouse up
 		else if(Input.GetMouseButtonUp(0)){
@@ -287,7 +287,8 @@ public class Sand : MonoBehaviour
 				_sandAudio.SetPosition(_cursor);
 
 				//make sure point is within bounds
-				if(_hitPos.x>_xMin&&_hitPos.x<_xMax&&_hitPos.z>_zMin&&_hitPos.z<_zMax){
+				if(_hitPos.x>_xMin&&_hitPos.x<_xMax&&_hitPos.z>_zMin&&_hitPos.z<_zMax&&
+						!Rock._holding){
 
 					//audio volume calc
 					Vector3 diff =_cursor-_prevPos;
@@ -323,6 +324,10 @@ public class Sand : MonoBehaviour
 						_sandParts.Stop();
 
 					_sandParts.transform.position=_cursor;
+				}
+				else{
+					_sandParts.Stop();
+					_sandAudio.SetTargetVolume(0);
 				}
 				_prevPos=_cursor;
 				if(_penDown)
@@ -467,11 +472,12 @@ public class Sand : MonoBehaviour
 	}
 
 	public float GetNormalizedZ(float z){
-		return Mathf.InverseLerp(_zMin,_zMax,z);
+		return Mathf.InverseLerp(_zMin+transform.position.z,_zMax+transform.position.z,z);
 	}
 
 	public bool WithinBox(Vector3 v,float buffer){
-		return (v.x>_xMin+buffer&&v.x<_xMax-buffer&&v.z>_zMin+buffer*2&&v.z<_zMax+buffer);
+		return (v.x>_xMin+transform.position.x+buffer&&v.x<_xMax+transform.position.x-buffer&&
+				v.z>_zMin+transform.position.z+buffer&&v.z<_zMax+transform.position.z-buffer);
 	}
 
 	public void Level(float amount){

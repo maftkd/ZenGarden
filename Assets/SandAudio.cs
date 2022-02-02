@@ -28,7 +28,10 @@ public class SandAudio : MonoBehaviour
 	AudioSource [] _sources;
 	AudioLowPassFilter [] _filters;
 
+	public static SandAudio _instance;
+
 	void Awake(){
+		_instance=this;
 		_sand=FindObjectOfType<Sand>();
 		_sources = new AudioSource[_frequencies.Length];
 		_filters = new AudioLowPassFilter[_frequencies.Length];
