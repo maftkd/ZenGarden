@@ -30,14 +30,16 @@ public class Sand : MonoBehaviour
 	bool _drawing;
 	Camera _cam;
 	Vector3 _hitPos;
-	public float _drawRadius;
+	public float _drawDiameter;
 	public float _drawDepth;
 	public AnimationCurve _fallOff;
 	bool _penDown;
-	Vector2 _drawDir;
+	public Vector2 _drawDir;
 	Vector3 _cursor;
 	public float _cursorLerp;
 	public float _minDistToUpdate;
+	public float _minDistForLine;
+	float _prevXFrac, _prevZFrac;
 
 	//audio
 	public SandAudio _sandAudio;
@@ -55,6 +57,12 @@ public class Sand : MonoBehaviour
 
 	void Awake(){
 		Init();
+		//RaiseLineFrom(1,0,0.5f,0.5f,_drawDiameter,Vector2.right);
+		//RaiseLineFrom(0.5f,0.5f,1f,0f,_drawDiameter,Vector2.up);
+		//RaiseLineFrom(0f,1f,0.5f,0.75f,_drawDiameter,Vector2.up);
+		//RaiseLineFrom(0f,1f,0.5f,0.25f,_drawDiameter,Vector2.up);
+		//RaiseLineFrom(0f,0.5f,0f,1.0f,_drawDiameter,Vector2.up);
+		UpdateMeshData();
 	}
 
 	[ContextMenu("Reset")]
@@ -281,7 +289,7 @@ public class Sand : MonoBehaviour
 					_cursor=worldSpaceHit;
 					_prevPos=_cursor;
 				}
-				else
+				else//slowly move cursor around
 					_cursor=Vector3.Lerp(_cursor,worldSpaceHit,_cursorLerp*Time.deltaTime);
 				_hitPos=transform.InverseTransformPoint(_cursor);
 				_sandAudio.SetPosition(_cursor);
@@ -312,18 +320,25 @@ public class Sand : MonoBehaviour
 					if(_penDown)
 					{
 						_sandParts.Play();
-						RaiseCircleFalloff(vertIndex,_drawRadius);
+						RaiseCircleFalloff(vertIndex,_drawDiameter);
 					}
 					else if(normDist>_minDistToUpdate)
 					{
 						if(!_sandParts.isPlaying)
 							_sandParts.Play();
-						RaiseHalfCircleFalloff(vertIndex,_drawRadius,_drawDir);
+						//Debug.Log(normDist);
+						if(normDist>_minDistForLine){
+							RaiseLineFrom(_prevXFrac,xFrac,_prevZFrac,zFrac,_drawDiameter,_drawDir);
+						}
+						RaiseHalfCircleFalloff(vertIndex,_drawDiameter,_drawDir);
+						//RaiseHalfCircleFalloff(vertIndex,_drawDiameter,_drawDir);
 					}
 					else
 						_sandParts.Stop();
 
 					_sandParts.transform.position=_cursor;
+					_prevXFrac=xFrac;
+					_prevZFrac=zFrac;
 				}
 				else{
 					_sandParts.Stop();
@@ -341,11 +356,26 @@ public class Sand : MonoBehaviour
 			//_audio.volume=Mathf.Lerp(_audio.volume,0,_audioGravity*Time.deltaTime);
     }
 
+	void LateUpdate(){
+		UpdateMeshData();
+
+	}
+
 	Vector3 _debugPos;
 
-	void RaiseCircleFalloff(int vertIndex, float radius){
-		int xVerts=Mathf.FloorToInt(radius/_vertSpacing.x);
-		int zVerts=Mathf.FloorToInt(radius/_vertSpacing.y);
+	public void RaiseCircleFalloff(Vector3 pos, float diameter){
+		float xFrac = Mathf.InverseLerp(_xMin,_xMax,pos.x);
+		float zFrac = Mathf.InverseLerp(_zMin,_zMax,pos.z);
+		int xCoord=Mathf.FloorToInt((_vertsX-1)*xFrac);
+		int zCoord=Mathf.FloorToInt((_vertsZ-1)*zFrac);
+		int vertIndex=zCoord*_vertsX+xCoord;
+		RaiseCircleFalloff(vertIndex,diameter);
+	}
+
+	void RaiseCircleFalloff(int vertIndex, float diameter){
+		float radius=diameter*0.5f;
+		int xVerts=Mathf.FloorToInt(diameter/_vertSpacing.x);
+		int zVerts=Mathf.FloorToInt(diameter/_vertSpacing.y);
 		int rowNum=vertIndex/_vertsX;
 		int colNum=vertIndex%_vertsX;
 		int xMin=colNum-xVerts;
@@ -397,9 +427,21 @@ public class Sand : MonoBehaviour
 		UpdateMeshData();
 	}
 
-	void RaiseHalfCircleFalloff(int vertIndex, float radius, Vector2 drawDir){
-		int xVerts=Mathf.FloorToInt(radius/_vertSpacing.x);
-		int zVerts=Mathf.FloorToInt(radius/_vertSpacing.y);
+	public void RaiseHalfCircleFalloff(Vector3 worldSpace, float diameter, Vector2 drawDir, 
+			bool mixColors=true,bool ignoreAudio=false){
+		float xFrac = Mathf.InverseLerp(_xMin,_xMax,worldSpace.x);
+		float zFrac = Mathf.InverseLerp(_zMin,_zMax,worldSpace.z);
+		int xCoord=Mathf.FloorToInt((_vertsX-1)*xFrac);
+		int zCoord=Mathf.FloorToInt((_vertsZ-1)*zFrac);
+		int vertIndex=zCoord*_vertsX+xCoord;
+		RaiseHalfCircleFalloff(vertIndex,diameter,drawDir,mixColors,ignoreAudio);
+	}
+
+	public void RaiseHalfCircleFalloff(int vertIndex, float diameter, Vector2 drawDir,
+			bool mixColors=true,bool ignoreAudio=false){
+		float radius=diameter*0.5f;
+		int xVerts=Mathf.FloorToInt(diameter/_vertSpacing.x);
+		int zVerts=Mathf.FloorToInt(diameter/_vertSpacing.y);
 		int rowNum=vertIndex/_vertsX;
 		int colNum=vertIndex%_vertsX;
 		int xMin=colNum-xVerts;
@@ -454,21 +496,70 @@ public class Sand : MonoBehaviour
 				Vector3 xDiff=_verts[right]-_verts[left];
 				Vector3 zDiff=_verts[above]-_verts[below];
 				_norms[vert]=Vector3.Cross(zDiff,xDiff);
-				//try swapping uvs
-				int randVert=Random.Range(zMin,zMax+1)*_vertsX+Random.Range(xMin,xMax+1);
 				float cur = _uvs[vert].x;
-				_uvs[vert].x=_uvs[randVert].x;
-				_uvs[randVert].x=cur;
+				//try swapping uvs
+				if(mixColors)
+				{
+					int randVert=Random.Range(zMin,zMax+1)*_vertsX+Random.Range(xMin,xMax+1);
+					_uvs[vert].x=_uvs[randVert].x;
+					_uvs[randVert].x=cur;
+				}
 				avgColor+=Mathf.Floor(cur);
 				totalCols++;
 			}
 		}
 
 		avgColor/=totalCols;
-		_sandAudio.SetAverageColor(avgColor);
-		
-		_debugPos=_verts[vertIndex];
-		UpdateMeshData();
+		if(!ignoreAudio)
+			_sandAudio.SetAverageColor(avgColor);
+		//_debugPos=_verts[vertIndex];
+	}
+
+	public void RaiseLineFrom(Vector3 prev, Vector3 cur, 
+			float diameter, Vector2 drawDir, bool mixColors=true){
+		float prevX=Mathf.InverseLerp(_xMin,_xMax,prev.x);
+		float curX=Mathf.InverseLerp(_xMin,_xMax,cur.x);
+		float prevZ=Mathf.InverseLerp(_zMin,_zMax,prev.z);
+		float curZ=Mathf.InverseLerp(_zMin,_zMax,cur.z);
+		RaiseLineFrom(prevX,curX,prevZ,curZ,diameter,drawDir,mixColors);
+	}
+
+	//x and z are normalized from 0 to 1
+	void RaiseLineFrom(float prevX, float curX, float prevZ, float curZ, 
+			float diameter, Vector2 drawDir, bool mixColors=true){
+		int startX=Mathf.FloorToInt((_vertsX-1)*prevX);
+		int startZ=Mathf.FloorToInt((_vertsZ-1)*prevZ);
+		int endX=Mathf.FloorToInt((_vertsX-1)*curX);
+		int endZ=Mathf.FloorToInt((_vertsZ-1)*curZ);
+		float slope = (float)(endZ-startZ)/(float)(endX-startX);
+		//gradual to 45 degree
+		if(Mathf.Abs(slope)<=1f){
+			int inc = endX>startX? 1 : -1;
+			int iDiff=Mathf.Abs(endX-startX);
+			for(int i=0; i<=iDiff; i++){
+				int x=startX+inc*i;
+				//slope = dz/dx
+				//dz = slope*dx
+				float dz = slope*(x-startX);
+				int z = Mathf.RoundToInt(startZ+dz);
+				int vertIndex=z*_vertsX+x;
+				RaiseHalfCircleFalloff(vertIndex,diameter,drawDir,mixColors,true);
+			}
+		}
+		//steep but not vertical
+		else{
+			int inc = endZ>startZ? 1 : -1;
+			int iDiff=Mathf.Abs(endZ-startZ);
+			for(int i=0; i<=iDiff; i++){
+				int z=startZ+inc*i;
+				//slope = dz/dx
+				//dx = dz/slope
+				float dx=(z-startZ)/slope;
+				int x = Mathf.RoundToInt(startX+dx);
+				int vertIndex=z*_vertsX+x;
+				RaiseHalfCircleFalloff(vertIndex,diameter,drawDir,mixColors,true);
+			}
+		}
 	}
 
 	public float GetNormalizedZ(float z){
@@ -507,10 +598,10 @@ public class Sand : MonoBehaviour
 	void OnDrawGizmos(){
 		Gizmos.color=Color.red;
 		Gizmos.DrawWireSphere(transform.TransformPoint(_hitPos),0.1f);
-		Gizmos.color=Color.blue;
-		Gizmos.DrawWireSphere(transform.TransformPoint(_debugPos),_drawRadius);
+		//Gizmos.color=Color.blue;
+		//Gizmos.DrawWireSphere(transform.TransformPoint(_debugPos),_drawRadius);
 		Gizmos.color=Color.magenta;
-		Gizmos.DrawWireSphere(_cursor,_drawRadius);
+		//Gizmos.DrawWireSphere(_cursor,_drawRadius);
 		Gizmos.DrawRay(_cursor,new Vector3(_drawDir.x,0,_drawDir.y).normalized*5f);
 	}
 }

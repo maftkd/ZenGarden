@@ -39,9 +39,6 @@ public class Rock : MonoBehaviour
 		_sand=FindObjectOfType<Sand>();
 
 		_light=transform.GetComponentInChildren<Light>();
-		/*
-		//_mixer
-		*/
 	}
 
     // Start is called before the first frame update
@@ -50,31 +47,34 @@ public class Rock : MonoBehaviour
 		_startPos=transform.position;
     }
 
+	Ray r;
     // Update is called once per frame
     void Update()
     {
 		switch(_state){
-			case 0:
+			case 0://idle on side
 				break;
-			case 1:
-				Ray r = _cam.ScreenPointToRay(Input.mousePosition);
+			case 1://dragging
+				r = _cam.ScreenPointToRay(Input.mousePosition);
 				float t = (_projectHeight-r.origin.y)/r.direction.y;
 				float x = r.origin.x+t*r.direction.x;
 				float z = r.origin.z+t*r.direction.z;
 				Vector3 worldSpaceHit=new Vector3(x,_projectHeight,z);
 				transform.position=worldSpaceHit;
-
-				/*
-				if(Input.GetMouseButtonDown(0)){
-					if(_sand.WithinBox(transform.position,_buffer)){
-						StartCoroutine(Place());
+				break;
+			case 2://thumping
+				break;
+			case 3://on board
+				r = _cam.ScreenPointToRay(Input.mousePosition);
+				RaycastHit hit;
+				_charging=false;
+				if(Physics.Raycast(r.origin,r.direction,out hit, 50f, 1)){
+					if(hit.transform==transform)
+					{
+						if(Input.GetMouseButton(0))
+							_charging=true;
 					}
 				}
-				*/
-				break;
-			case 2:
-				break;
-			case 3:
 				if(_charging){
 					if(!_light.enabled){
 						_light.enabled=true;
@@ -83,7 +83,6 @@ public class Rock : MonoBehaviour
 							StartCoroutine(FadeOutSource(_source));
 						_source = Sfx.PlayOneShot3D(_sustain[_sourceIndex],transform.position);
 						_source.volume=_sustainVol;
-						//_source.outputAudioMixerGroup = _mixer.FindMatchingGroups(_mixerName)[0];
 					}
 					if(_emission<_maxEmission){
 						_emission+=Time.deltaTime*_chargeRate;
@@ -132,7 +131,6 @@ public class Rock : MonoBehaviour
 		ParticleSystem.MainModule main = _parts.main;
 		Color dustColor=Color.HSVToRGB(hue,0.33f,0.42f);
 		main.startColor=c;
-		//main.startColor=dustColor;
 
 		//animate position;
 		Vector3 startPos=transform.position;
@@ -165,6 +163,8 @@ public class Rock : MonoBehaviour
 
 	void OnMouseUp(){
 		_holding=false;
+		//Debug.Log("stop charging");
+		StopCharging();
 		if(_sand.WithinBox(transform.position,_buffer)){
 			StartCoroutine(Place());
 		}
@@ -179,17 +179,25 @@ public class Rock : MonoBehaviour
 		StopCharging(true);
 	}
 
-	void OnMouseOver(){
+	/*
+	void OnMouseEnter(){
 		if(Input.GetMouseButton(0))
+		{
 			_charging=true;
-		/*
+		}
 		else
+		{
+			//Debug.Log("stop charging");
 			StopCharging();
-			*/
+		}
 	}
+	*/
+
+	/*
 	void OnMouseExit(){
 		StopCharging();
 	}
+	*/
 
 	void StopCharging(bool fast=false){
 		_charging=false;
