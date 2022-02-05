@@ -247,13 +247,12 @@ public class Sand : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		//start drawing on mouse down
+		//start drawing on mouse or finger down
 		if(Input.GetMouseButtonDown(0)&&!_help.IsActive()){
 			Ray r = _cam.ScreenPointToRay(Input.mousePosition);
 			//raycast to rocks
 			RaycastHit hit;
 			if(Physics.Raycast(r.origin,r.direction,out hit,50f,1)){
-				//
 			}
 			else{
 				_penDown=true;
@@ -276,6 +275,14 @@ public class Sand : MonoBehaviour
 				_sandParts.Stop();
 				//# hack
 				_penDown=true;
+			}
+			//check for raking
+			else if(Rake._raking||ArpBall._rolling){
+				if(_sandParts.isPlaying)
+					_sandParts.Stop();
+				_sandAudio.SetTargetVolume(0);
+				_penDown=false;
+				_drawing=false;
 			}
 			else{
 				//raycast to ground plane where y=0
@@ -348,7 +355,6 @@ public class Sand : MonoBehaviour
 				if(_penDown)
 					_penDown=false;
 			}
-
 		}
 		else
 			_sandAudio.SetTargetVolume(0);
@@ -424,7 +430,7 @@ public class Sand : MonoBehaviour
 		}
 		
 		_debugPos=_verts[vertIndex];
-		UpdateMeshData();
+		//UpdateMeshData();
 	}
 
 	public void RaiseHalfCircleFalloff(Vector3 worldSpace, float diameter, Vector2 drawDir, 
@@ -569,6 +575,51 @@ public class Sand : MonoBehaviour
 	public bool WithinBox(Vector3 v,float buffer){
 		return (v.x>_xMin+transform.position.x+buffer&&v.x<_xMax+transform.position.x-buffer&&
 				v.z>_zMin+transform.position.z+buffer&&v.z<_zMax+transform.position.z-buffer);
+	}
+
+	public Vector3 ClosestPoint(Vector3 v, float buffer){
+		if(WithinBox(v,buffer))
+			return v;
+		float zDiff=0;
+		float xDiff=0;
+		if(v.z<_zMin+transform.position.z+buffer)
+			zDiff=v.z-(_zMin+transform.position.z+buffer);
+		else if(v.z>_zMax+transform.position.z-buffer)
+			zDiff=v.z-(_zMax+transform.position.z-buffer);
+		if(v.x<_xMin+transform.position.x+buffer)
+			xDiff=v.x-(_xMin+transform.position.x+buffer);
+		else if(v.x>_xMax+transform.position.x-buffer)
+			xDiff=v.x-(_xMax+transform.position.x-buffer);
+
+		Debug.Log("zDiff: "+zDiff);
+		Debug.Log("xDiff: "+xDiff);
+
+		if(zDiff<0&&Mathf.Abs(xDiff)<=zDiff*-1){
+			v.z=_zMin+transform.position.z+buffer;
+			float x = Mathf.InverseLerp(_xMin+buffer,_xMax-buffer,v.x);
+			v.x=Mathf.Lerp(_xMin+buffer,_xMax-buffer,x);
+			Debug.Log("erm");
+		}
+		else if(xDiff<0&&Mathf.Abs(zDiff)<=xDiff*-1){
+			v.x=_xMin+transform.position.x+buffer;
+			float z = Mathf.InverseLerp(_zMin+transform.position.z+buffer,_zMax+transform.position.z-buffer,v.z);
+			Debug.Log("z"+z);
+			v.z=Mathf.Lerp(_zMin+buffer,_zMax-buffer,z);
+			v.z+=transform.position.z;
+			Debug.Log("umm");
+		}
+		else if(zDiff>0&&Mathf.Abs(xDiff)<=zDiff){
+			v.z=_zMax+transform.position.z-buffer;
+			float x = Mathf.InverseLerp(_xMin+buffer,_xMax-buffer,v.x);
+			v.x=Mathf.Lerp(_xMin+buffer,_xMax-buffer,x);
+		}
+		else if(xDiff>0&&Mathf.Abs(zDiff)<=xDiff){
+			v.x=_xMax+transform.position.x-buffer;
+			float z = Mathf.InverseLerp(_zMin+transform.position.z+buffer,_zMax+transform.position.z-buffer,v.z);
+			v.z=Mathf.Lerp(_zMin+buffer,_zMax-buffer,z);
+			v.z+=transform.position.z;
+		}
+		return v;
 	}
 
 	public void Level(float amount){

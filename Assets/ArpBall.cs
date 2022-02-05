@@ -14,6 +14,12 @@ public class ArpBall : MonoBehaviour
 	Sand _sand;
 	Vector3 _prevPos;
 	public float _minSpeed;
+	public static bool _rolling;
+	Material _mat;
+	Vector4 _emission;
+	public float _minDotToEmit;
+	float _emissionFactor;
+	public float _emissionDecay;
 
 	void Awake(){
 		_cam=Camera.main;
@@ -21,6 +27,8 @@ public class ArpBall : MonoBehaviour
 		_radius=transform.localScale.x*0.5f;//x is arbitrary, assume x=y=z
 		_vel=Vector3.zero;
 		_sand=FindObjectOfType<Sand>();
+		_mat=GetComponent<Renderer>().material;
+		_emission=Vector4.zero;
 	}
 
     // Start is called before the first frame update
@@ -55,7 +63,10 @@ public class ArpBall : MonoBehaviour
 						_sand.transform.InverseTransformPoint(newPos),
 						_radius*2f,new Vector2(_vel.x,_vel.z),false);
 				RollTo(newPos,diff);
+				_rolling=true;
 			}
+			else
+				_rolling=false;
 		}
 		_prevPos=Input.mousePosition;
 		if(!contact&&_vel.sqrMagnitude>_minSpeed*_minSpeed){
@@ -64,6 +75,19 @@ public class ArpBall : MonoBehaviour
 			RollTo(newPos,_vel.normalized);
 			_sand.RaiseHalfCircleFalloff(_sand.transform.InverseTransformPoint(newPos),
 					_radius*2f,new Vector2(_vel.x,_vel.z),false,true);
+			_rolling=true;
+		}
+		else
+			_rolling=false;
+
+		if(!_rolling){
+			if(_emissionFactor>0){
+				_emissionFactor-=Time.deltaTime*_emissionDecay;
+				if(_emissionFactor<0)
+					_emissionFactor=0;
+				_emission=Vector4.Lerp(Vector4.zero,_emission,_emissionFactor);
+				_mat.SetVector("_Emission",_emission);
+			}
 		}
     }
 
@@ -78,5 +102,17 @@ public class ArpBall : MonoBehaviour
 		Vector3 dir=Vector3.Cross(Vector3.up,diff);
 		transform.Rotate(dir*degrees*_rollMult,Space.World);
 		transform.position=newPos;
+		Emit();
+	}
+
+	void Emit(){
+		float yEmit=Mathf.Abs(Vector3.Dot(transform.up,Vector3.up));
+		float xEmit=Mathf.Abs(Vector3.Dot(transform.right,Vector3.up));
+		float zEmit=Mathf.Abs(Vector3.Dot(transform.forward,Vector3.up));
+		_emission.x=Mathf.InverseLerp(_minDotToEmit,1,xEmit);
+		_emission.y=Mathf.InverseLerp(_minDotToEmit,1,yEmit);
+		_emission.z=Mathf.InverseLerp(_minDotToEmit,1,zEmit);
+		_mat.SetVector("_Emission",_emission);
+		_emissionFactor=1f;
 	}
 }
