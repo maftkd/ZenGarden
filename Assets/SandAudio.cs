@@ -24,9 +24,11 @@ public class SandAudio : MonoBehaviour
 
 	[Header("Frequencies")]
 	public float [] _frequencies;
+	public int [] _frequencyZones;
 	Sand _sand;
 	AudioSource [] _sources;
 	AudioLowPassFilter [] _filters;
+	bool _chord;
 
 	public static SandAudio _instance;
 
@@ -81,11 +83,12 @@ public class SandAudio : MonoBehaviour
     {
 		_actualVolume=Mathf.Lerp(_actualVolume,_targetVolume,_audioSensitivity*Time.deltaTime);
 		float z01 = _sand.GetNormalizedZ(transform.position.z);
-		int curRegion=Mathf.FloorToInt(Mathf.Lerp(0,_frequencies.Length,z01));
-		if(curRegion>=_frequencies.Length)
-			curRegion=_frequencies.Length-1;
+		int curRegion=Mathf.FloorToInt(Mathf.Lerp(0,_frequencyZones.Length,z01));
+		if(curRegion>=_frequencyZones.Length)
+			curRegion=_frequencyZones.Length-1;
 		for(int i=0; i<_frequencies.Length; i++){
-			if(i==curRegion)
+			int fZone=_frequencyZones[curRegion];
+			if(i==fZone||(_chord&&(i==fZone+2||i==fZone+4)))
 			{
 				_sources[i].volume=Mathf.Lerp(_sources[i].volume,_actualVolume,_audioSensitivity*Time.deltaTime);
 			}
@@ -103,11 +106,15 @@ public class SandAudio : MonoBehaviour
 		transform.position=pos;
 	}
 
-	public void SetTargetVolume(float v){
+	public void SetTargetVolume(float v,bool chord=false){
+		_chord=chord;
+		if(v>1)
+			v=1;
 		_targetVolume=v;
 	}
 
 	public void SetAverageColor(float v){
+		Debug.Log("avg: "+v);
 		_avgCol=v;
 	}
 }

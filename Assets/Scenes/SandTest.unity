@@ -3167,6 +3167,7 @@ MonoBehaviour:
   _decel: 1
   _minSpeed: 0.1
   _minDotToEmit: 0.5
+  _emissionDecay: 0.5
 --- !u!23 &1338451921
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -13083,10 +13084,17 @@ MonoBehaviour:
   _freqRange: {x: 5000, y: 10000}
   _frequencies:
   - 261.6
-  - 329.7
+  - 293.7
+  - 329.6
+  - 349.2
   - 392
   - 440
-  - 493.8
+  - 493.9
+  - 523.25
+  - 587.3
+  - 659.25
+  - 698.46
+  _frequencyZones: 0000000002000000040000000500000006000000
 --- !u!4 &1893654266
 Transform:
   m_ObjectHideFlags: 0
@@ -13125,8 +13133,10 @@ MonoBehaviour:
   _numSpokes: 3
   _rakeRadius: 0.5
   _emissionColor: {r: 0, g: 0.9529412, b: 1, a: 1}
-  _emissionMult: 5
+  _emissionMult: 10
   _emissionDecay: 0.5
+  _maxSpeed: 50
+  _speedVolRange: {x: 0.1, y: 0.25}
 --- !u!1001 &2083575101
 PrefabInstance:
   m_ObjectHideFlags: 0

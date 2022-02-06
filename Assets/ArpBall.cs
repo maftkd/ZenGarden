@@ -75,7 +75,7 @@ public class ArpBall : MonoBehaviour
 			RollTo(newPos,_vel.normalized);
 			_sand.RaiseHalfCircleFalloff(_sand.transform.InverseTransformPoint(newPos),
 					_radius*2f,new Vector2(_vel.x,_vel.z),false,true);
-			_rolling=true;
+			//_rolling=true;
 		}
 		else
 			_rolling=false;

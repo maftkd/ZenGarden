@@ -121,8 +121,8 @@ public class Rock : MonoBehaviour
 		
 		//set colors
 		float z01 = _sand.GetNormalizedZ(transform.position.z);
-		_level = Mathf.FloorToInt(z01*SandAudio._instance._frequencies.Length);
-		float hue = _level/(float)SandAudio._instance._frequencies.Length;
+		_level = Mathf.FloorToInt(z01*SandAudio._instance._frequencyZones.Length);
+		float hue = _level/(float)SandAudio._instance._frequencyZones.Length;
 		Color c = Color.HSVToRGB(hue,1,1);
 		_mat=GetComponent<Renderer>().material;
 		_mat.SetColor("_EmissionColor",c);

@@ -356,7 +356,7 @@ public class Sand : MonoBehaviour
 					_penDown=false;
 			}
 		}
-		else
+		else if(!Rake._raking)
 			_sandAudio.SetTargetVolume(0);
 		//else
 			//_audio.volume=Mathf.Lerp(_audio.volume,0,_audioGravity*Time.deltaTime);
@@ -511,7 +511,9 @@ public class Sand : MonoBehaviour
 					_uvs[randVert].x=cur;
 				}
 				avgColor+=Mathf.Floor(cur);
+				_cols+=Mathf.Floor(cur);
 				totalCols++;
+				_pixels++;
 			}
 		}
 
@@ -519,6 +521,21 @@ public class Sand : MonoBehaviour
 		if(!ignoreAudio)
 			_sandAudio.SetAverageColor(avgColor);
 		//_debugPos=_verts[vertIndex];
+	}
+
+	float _cols;
+	int _pixels;
+	float _avg;
+
+	public void ResetAvgSandColor(){
+		_cols=0;
+		_pixels=0;
+	}
+	public float GetAvgSandColor(){
+		if(_pixels==0)
+			return _avg;
+		_avg=_cols/_pixels;
+		return _avg;
 	}
 
 	public void RaiseLineFrom(Vector3 prev, Vector3 cur, 
@@ -591,22 +608,17 @@ public class Sand : MonoBehaviour
 		else if(v.x>_xMax+transform.position.x-buffer)
 			xDiff=v.x-(_xMax+transform.position.x-buffer);
 
-		Debug.Log("zDiff: "+zDiff);
-		Debug.Log("xDiff: "+xDiff);
 
 		if(zDiff<0&&Mathf.Abs(xDiff)<=zDiff*-1){
 			v.z=_zMin+transform.position.z+buffer;
 			float x = Mathf.InverseLerp(_xMin+buffer,_xMax-buffer,v.x);
 			v.x=Mathf.Lerp(_xMin+buffer,_xMax-buffer,x);
-			Debug.Log("erm");
 		}
 		else if(xDiff<0&&Mathf.Abs(zDiff)<=xDiff*-1){
 			v.x=_xMin+transform.position.x+buffer;
 			float z = Mathf.InverseLerp(_zMin+transform.position.z+buffer,_zMax+transform.position.z-buffer,v.z);
-			Debug.Log("z"+z);
 			v.z=Mathf.Lerp(_zMin+buffer,_zMax-buffer,z);
 			v.z+=transform.position.z;
-			Debug.Log("umm");
 		}
 		else if(zDiff>0&&Mathf.Abs(xDiff)<=zDiff){
 			v.z=_zMax+transform.position.z-buffer;
