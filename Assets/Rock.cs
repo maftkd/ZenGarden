@@ -93,6 +93,8 @@ public class Rock : MonoBehaviour
 					}
 				}
 				else{
+					if(_parts.isPlaying)
+						_parts.Stop();
 					if(_emission>0){
 						_emission-=Time.deltaTime*_chargeRate;
 						if(_emission<0)
