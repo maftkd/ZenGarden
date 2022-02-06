@@ -55,6 +55,18 @@ public class Rake : MonoBehaviour
 				}
 			}
 
+			r = _cam.ScreenPointToRay(Input.mousePosition);
+			//raycast to rocks
+			RaycastHit hit;
+			if(Physics.Raycast(r.origin,r.direction,out hit,50f,1)){
+				_sandAudio.SetTargetVolume(0);
+				_raking=false;
+				return;
+				//_sandParts.Stop();
+				//# hack
+				//_penDown=true;
+			}
+
 			Vector3 diff=worldSpaceHit-transform.position;
 			bool inZone=_raking || diff.sqrMagnitude<=_radius*_radius;
 			//check if clicking on rake, and rake has moved a significant distance

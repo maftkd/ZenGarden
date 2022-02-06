@@ -114,7 +114,6 @@ public class SandAudio : MonoBehaviour
 	}
 
 	public void SetAverageColor(float v){
-		Debug.Log("avg: "+v);
 		_avgCol=v;
 	}
 }
