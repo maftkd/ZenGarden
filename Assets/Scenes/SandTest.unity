@@ -788,7 +788,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2102606041}
         m_TargetAssemblyTypeName: SingingBowl, Assembly-CSharp
-        m_MethodName: SpinNext
+        m_MethodName: SpinLast
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2720,7 +2720,7 @@ MonoBehaviour:
   _size: {x: 10, y: 10}
   _vertsX: 128
   _vertsZ: 128
-  _drawDiameter: 0.3
+  _drawDiameter: 0.5
   _drawDepth: 0.1
   _fallOff:
     serializedVersion: 2
@@ -2757,6 +2757,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 01803586817beaa4ca3ad2d6e5722cef, type: 2}
   - {fileID: 2100000, guid: 3f9203398bb6acb4f884c18aec6c5522, type: 2}
   - {fileID: 2100000, guid: 89b9dda107a73c44d9ce55f595bc1e7c, type: 2}
+  - {fileID: 2100000, guid: 8ad8ac6e6ae168247bab44068f7ffe28, type: 2}
 --- !u!23 &1142577290
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2882,23 +2883,26 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: 6fdd49ea93c224448b64e69df5d18927, type: 3}
-    m_FontSize: 55
+    m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 0
     m_MaxSize: 71
     m_Alignment: 1
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
-    m_LineSpacing: 1
+    m_LineSpacing: 0.76
   m_Text: 'Designed By: Michael Feldman, Craig Hamilton,
 
     Ryan Peterson, Tulie
     the Art, Joseph Brown,
 
-    and the Washington DC Area GGJ 2022'
+    and the Washington DC Area GGJ 2022, with
+
+    special
+    thanks to Micha Faw and Ariel Lee.'
 --- !u!222 &1196871985
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2993,7 +2997,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c65be8fcf494d8e46aeece21920116c3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.3671694
+      value: 4.08
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c65be8fcf494d8e46aeece21920116c3, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3001,7 +3005,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c65be8fcf494d8e46aeece21920116c3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.4217982
+      value: -3.448
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c65be8fcf494d8e46aeece21920116c3, type: 3}
       propertyPath: m_LocalRotation.w
@@ -8274,7 +8278,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: b8bd2f7e4c2b166468b8968381a208dc, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8295,7 +8299,7 @@ ParticleSystemRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_RenderMode: 0
+  m_RenderMode: 4
   m_MeshDistribution: 0
   m_SortMode: 0
   m_MinParticleSize: 0
@@ -8306,7 +8310,7 @@ ParticleSystemRenderer:
   m_SortingFudge: 0
   m_NormalDirection: 1
   m_ShadowBias: 0
-  m_RenderAlignment: 0
+  m_RenderAlignment: 1
   m_Pivot: {x: 0, y: 0, z: 0}
   m_Flip: {x: 0, y: 0, z: 0}
   m_UseCustomVertexStreams: 0
@@ -8316,7 +8320,7 @@ ParticleSystemRenderer:
   m_FreeformStretching: 0
   m_RotateWithStretchDirection: 1
   m_VertexStreams: 00010304
-  m_Mesh: {fileID: 0}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   m_Mesh1: {fileID: 0}
   m_Mesh2: {fileID: 0}
   m_Mesh3: {fileID: 0}
@@ -8461,7 +8465,7 @@ ParticleSystem:
     startSpeed:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 3
+      scalar: 4
       minScalar: 2
       maxCurve:
         serializedVersion: 2
@@ -8514,8 +8518,8 @@ ParticleSystem:
     startColor:
       serializedVersion: 2
       minMaxState: 0
-      minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 1, b: 1, a: 1}
+      minColor: {r: 0.6039216, g: 0.5568628, b: 0.4039216, a: 1}
+      maxColor: {r: 0.49, g: 0.44568998, b: 0.28322, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -9265,7 +9269,7 @@ ParticleSystem:
     m_BurstCount: 0
     m_Bursts: []
   SizeModule:
-    enabled: 0
+    enabled: 1
     curve:
       serializedVersion: 2
       minMaxState: 1
@@ -9276,21 +9280,21 @@ ParticleSystem:
         m_Curve:
         - serializedVersion: 3
           time: 0
-          value: 0
+          value: 1
           inSlope: 0
-          outSlope: 1
+          outSlope: 0
           tangentMode: 0
           weightedMode: 0
           inWeight: 0.33333334
           outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
-          value: 1
-          inSlope: 1
-          outSlope: 0
+          value: 0
+          inSlope: 0.07178016
+          outSlope: 0.07178016
           tangentMode: 0
           weightedMode: 0
-          inWeight: 0.33333334
+          inWeight: 0.1354438
           outWeight: 0.33333334
         m_PreInfinity: 2
         m_PostInfinity: 2
@@ -13040,7 +13044,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1848595932}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.333, y: 0, z: 0}
+  m_LocalPosition: {x: 0.8, y: 0, z: -0.17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13128,7 +13132,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _minDist: 0.01
-  _angleLerp: 150
+  _angleLerp: 100
   _spokeRadius: 0.1
   _numSpokes: 3
   _rakeRadius: 0.5

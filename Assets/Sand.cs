@@ -142,7 +142,7 @@ public class Sand : MonoBehaviour
 	}
 
 	Vector2[] _uvCache;
-	public void CacheLastPattern(){
+	public void CacheCurPattern(){
 		Material patternMat = _patterns[_lastPattern];
 		Texture2D patternTex = (Texture2D)patternMat.GetTexture("_MainTex");
 		Color[] pixels = patternTex.GetPixels();
@@ -173,8 +173,38 @@ public class Sand : MonoBehaviour
 	public void CacheNextPattern(){
 		//go next pattern
 		_lastPattern++;
-		if(_lastPattern>=_patterns.Length)
+		if(_lastPattern>=_patterns.Length-1)
 			_lastPattern=0;
+		Material patternMat = _patterns[_lastPattern];
+		Texture2D patternTex = (Texture2D)patternMat.GetTexture("_MainTex");
+		Color[] pixels = patternTex.GetPixels();
+		if(_uvCache==null)
+			_uvCache=new Vector2[_uvs.Length];
+		for(int z=0;z<_vertsZ; z++){
+			float normZ=z/(float)(_vertsZ-1);
+			int sampleY=Mathf.FloorToInt(normZ*patternTex.height);
+			if(sampleY>=patternTex.height)
+				sampleY=patternTex.height-1;
+			for(int x=0;x<_vertsX; x++){
+				int vertIndex=z*_vertsX+x;
+				float normX=x/(float)(_vertsX-1);
+				int sampleX=Mathf.FloorToInt(normX*patternTex.width);
+				if(sampleX>=patternTex.width)
+					sampleX=patternTex.width-1;
+				int colorIndex=sampleY*patternTex.width+sampleX;
+				float color=pixels[colorIndex].r;
+				float u = normX;
+				if(color>0.5f)
+					u+=1f;
+				_uvCache[vertIndex].x=u;
+				_uvCache[vertIndex].y=normZ;
+			}
+		}
+	}
+
+	public void CacheLastPattern(){
+		//go next pattern
+		_lastPattern=_patterns.Length-1;
 		Material patternMat = _patterns[_lastPattern];
 		Texture2D patternTex = (Texture2D)patternMat.GetTexture("_MainTex");
 		Color[] pixels = patternTex.GetPixels();
@@ -327,12 +357,16 @@ public class Sand : MonoBehaviour
 					if(_penDown)
 					{
 						_sandParts.Play();
+						_sandParts.transform.position=worldSpaceHit;
 						RaiseCircleFalloff(vertIndex,_drawDiameter);
 					}
 					else if(normDist>_minDistToUpdate)
 					{
 						if(!_sandParts.isPlaying)
+						{
 							_sandParts.Play();
+							_sandParts.transform.position=worldSpaceHit;
+						}
 						//Debug.Log(normDist);
 						if(normDist>_minDistForLine){
 							RaiseLineFrom(_prevXFrac,xFrac,_prevZFrac,zFrac,_drawDiameter,_drawDir);
@@ -343,7 +377,7 @@ public class Sand : MonoBehaviour
 					else
 						_sandParts.Stop();
 
-					_sandParts.transform.position=_cursor;
+					_sandParts.transform.position=worldSpaceHit;
 					_prevXFrac=xFrac;
 					_prevZFrac=zFrac;
 				}
@@ -493,7 +527,9 @@ public class Sand : MonoBehaviour
 		float avgColor=0;
 		int totalCols=0;
 		for(int z=zMin;z<=zMax;z++){
+			float zDiff2=(z-rowNum)*_vertSpacing.y;
 			for(int x=xMin;x<=xMax;x++){
+				float xDiff2=(x-colNum)*_vertSpacing.x;
 				int vert=z*_vertsX+x;
 				int left=vert-1;
 				int right=vert+1;
@@ -503,12 +539,21 @@ public class Sand : MonoBehaviour
 				Vector3 zDiff=_verts[above]-_verts[below];
 				_norms[vert]=Vector3.Cross(zDiff,xDiff);
 				float cur = _uvs[vert].x;
+				//good ol' pythagoras
+				float rad=Mathf.Sqrt(zDiff2*zDiff2+xDiff2*xDiff2);
 				//try swapping uvs
-				if(mixColors)
+				if(mixColors&&rad<=radius)
 				{
-					int randVert=Random.Range(zMin,zMax+1)*_vertsX+Random.Range(xMin,xMax+1);
-					_uvs[vert].x=_uvs[randVert].x;
-					_uvs[randVert].x=cur;
+					float theta=Mathf.PI*2*Random.value;
+					rad = Random.value*radius;
+					int xOff = Mathf.RoundToInt(Mathf.Cos(theta)*rad/_vertSpacing.x);
+					int zOff = Mathf.RoundToInt(Mathf.Sin(theta)*rad/_vertSpacing.y);
+					if(x+xOff>0&&x+xOff<_vertsX&&z+zOff>0&&z+zOff<_vertsZ){
+						//int randVert=Random.Range(zMin,zMax+1)*_vertsX+Random.Range(xMin,xMax+1);
+						int randVert=(z+zOff)*_vertsZ+x+xOff;
+						_uvs[vert].x=_uvs[randVert].x;
+						_uvs[randVert].x=cur;
+					}
 				}
 				avgColor+=Mathf.Floor(cur);
 				_cols+=Mathf.Floor(cur);

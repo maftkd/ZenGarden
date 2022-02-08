@@ -78,7 +78,8 @@ public class SingingBowl : MonoBehaviour
     {
 		if(_state!=0)
 			return;
-		StartCoroutine(Spin());
+		SpinNext();
+		//StartCoroutine(Spin());
     }
 
     private Vector3 PlaceOnCircle(Vector3 pos)
@@ -115,7 +116,7 @@ public class SingingBowl : MonoBehaviour
 		return audio;
 	}
 
-	IEnumerator Spin(bool rotate=false){
+	IEnumerator Spin(bool rotate=false, bool last=false){
 		_state=1;
 		float timer=0;
 		_source.Play();
@@ -123,8 +124,10 @@ public class SingingBowl : MonoBehaviour
 		float theta=0;
 		if(rotate)
 			_sand.CacheNextPattern();
-		else
+		else if(last)
 			_sand.CacheLastPattern();
+		else
+			_sand.CacheCurPattern();
 		Rock[] rocks = FindObjectsOfType<Rock>();
 		while(timer<_spinDur){
 			timer+=Time.deltaTime;
@@ -159,5 +162,11 @@ public class SingingBowl : MonoBehaviour
 		if(_state!=0)
 			return;
 		StartCoroutine(Spin(true));
+	}
+
+	public void SpinLast(){
+		if(_state!=0)
+			return;
+		StartCoroutine(Spin(false,true));
 	}
 }
