@@ -59,6 +59,7 @@ Shader "Custom/ArpBall"
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
+			/*
             // Albedo comes from a texture tinted by color
             fixed n = tex2D (_MainTex, IN.uv_MainTex).r;
 			n=lerp(n,1,_NoiseReduction);
@@ -81,12 +82,13 @@ Shader "Custom/ArpBall"
 
 
 			pole=saturate(pole);
+			*/
 
-			o.Albedo=lerp(_Color.rgb,_ColorB.rgb,pole)*n;
+			o.Albedo=_Color.rgb;//lerp(_Color.rgb,_ColorB.rgb,pole)*n;
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
-            o.Smoothness = _Glossiness*n;
-			o.Emission=_EmissionColor.rgb*(xPole*_Emission.x+yPole*_Emission.y+zPole*_Emission.z);
+            o.Smoothness = _Glossiness;
+			o.Emission=_EmissionColor.rgb;//*(xPole*_Emission.x+yPole*_Emission.y+zPole*_Emission.z);
             o.Alpha = 1;
         }
         ENDCG

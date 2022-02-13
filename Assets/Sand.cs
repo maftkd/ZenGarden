@@ -55,6 +55,9 @@ public class Sand : MonoBehaviour
 
 	Help _help;
 
+	//progress
+	RockSpawner _spawner;
+
 	void Awake(){
 		Init();
 		//RaiseLineFrom(1,0,0.5f,0.5f,_drawDiameter,Vector2.right);
@@ -72,6 +75,7 @@ public class Sand : MonoBehaviour
 		_meshR=GetComponent<MeshRenderer>();
 		_cam=Camera.main;
 		_help=FindObjectOfType<Help>();
+		_spawner=FindObjectOfType<RockSpawner>();
 		//generate initial mesh
 		GenerateMesh();
 		LoadPattern(0);
@@ -344,6 +348,7 @@ public class Sand : MonoBehaviour
 					float zDiff=diff.z/_size.y;
 					float normDist=Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
 					float vel = normDist/Time.deltaTime;
+					_spawner.SetDrawVel(vel);
 					float targetV=vel/_maxVel;
 					_sandAudio.SetTargetVolume(targetV);
 					_drawDir=new Vector2(xDiff,zDiff);
