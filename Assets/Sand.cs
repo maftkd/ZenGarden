@@ -18,6 +18,7 @@ public class Sand : MonoBehaviour
 {
 	//mesh
 	public Vector2 _size;
+	Vector2 _center;
 	public int _vertsX;
 	public int _vertsZ;
 	MeshFilter _meshF;
@@ -76,6 +77,8 @@ public class Sand : MonoBehaviour
 		_cam=Camera.main;
 		_help=FindObjectOfType<Help>();
 		_spawner=FindObjectOfType<RockSpawner>();
+		_maxRippleRadius=Mathf.Sqrt(_size.x*_size.x+_size.y*_size.y)+_rippleWidth*2;
+		_rippleRadius=_maxRippleRadius;
 		//generate initial mesh
 		GenerateMesh();
 		LoadPattern(0);
@@ -108,6 +111,7 @@ public class Sand : MonoBehaviour
 		_xMax=-_xMin;
 		_zMin=-_size.y*0.5f;
 		_zMax=-_zMin;
+		_center = new Vector2 ((_xMin+_xMax)*0.5f,(_zMin+_zMax)*0.5f);
 		
 		//assign vertex positions - note that these are in local space
 		//so when doing ray-casting or debugging points otta be converted to/from world-space
@@ -399,6 +403,10 @@ public class Sand : MonoBehaviour
 			_sandAudio.SetTargetVolume(0);
 		//else
 			//_audio.volume=Mathf.Lerp(_audio.volume,0,_audioGravity*Time.deltaTime);
+
+		if(_rippleRadius<_maxRippleRadius){
+			UpdateRipple();
+		}
     }
 
 	void LateUpdate(){
@@ -706,6 +714,73 @@ public class Sand : MonoBehaviour
 				_uvs[vertIndex]=Vector2.Lerp(_uvs[vertIndex],_uvCache[vertIndex],amount);
 			}
 		}
+	}
+
+	float _rippleRadius;
+	public float _rippleWidth;
+	public float _rippleRate;
+	float _maxRippleRadius;
+	public float _rippleFreq;
+	float _rippleTimer;
+	public float _rippleAmp;
+	public void Ripple(Vector3 pos){
+		pos = transform.InverseTransformPoint(pos);
+		_center=new Vector2(pos.x,pos.z);
+		_rippleRadius=_rippleWidth;
+	}
+
+	void UpdateRipple(){
+		//grow radius
+		//
+		//loop through verts
+		//animate verts within radius ring
+		_rippleRadius+=Time.deltaTime*_rippleRate;
+		_rippleTimer+=Time.deltaTime;
+
+		for(int z=0; z<_vertsZ;z++){
+			for(int x=0; x<_vertsX; x++){
+				int vertIndex=z*_vertsX+x;
+				Vector3 pos = _verts[vertIndex];
+				float xDiff=pos.x-_center.x;
+				float zDiff=pos.z-_center.y;
+				float rad = Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
+				float amp=0;
+				if(rad<=_rippleRadius&&rad>=_rippleRadius-_rippleWidth){
+					amp = Mathf.InverseLerp(_rippleRadius,_rippleRadius-_rippleWidth,rad);
+					pos.y=Mathf.Sin((_rippleTimer*Mathf.PI*2f+rad)*_rippleFreq)*_drawDepth*_rippleAmp*amp;
+					_verts[vertIndex]=pos;
+				}
+				else if(rad<_rippleRadius-_rippleWidth){
+					amp = _rippleRadius-_rippleWidth-rad;
+					if(amp>1f)
+						amp=1f;
+					amp = 1-amp;
+					if(amp>0)
+					{
+						pos.y=Mathf.Sin((_rippleTimer*Mathf.PI*2f+rad)*_rippleFreq)*_drawDepth*amp*_rippleAmp;
+						_verts[vertIndex]=pos;
+					}
+				}
+				//_uvs[vertIndex]=Vector2.Lerp(_uvs[vertIndex],_uvCache[vertIndex],amount);
+			}
+		}
+		for(int z=1;z<_vertsZ-1;z++){
+			for(int x=1;x<_vertsX-1;x++){
+				int vert=z*_vertsX+x;
+				int left=vert-1;
+				int right=vert+1;
+				int below=vert-_vertsX;
+				int above=vert+_vertsX;
+				Vector3 xDiff=_verts[right]-_verts[left];
+				Vector3 zDiff=_verts[above]-_verts[below];
+				_norms[vert]=Vector3.Cross(zDiff,xDiff);
+			}
+		}
+	}
+
+	public bool IsRippling(){
+		return _rippleRadius<_maxRippleRadius*0.5f;
+
 	}
 
 	void OnDrawGizmos(){

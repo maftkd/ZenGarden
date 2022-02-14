@@ -9,6 +9,7 @@ Shader "Custom/Rock"
 		_EmissionColor ("Emission color", Color) = (1,1,1,1)
 		_Emission ("Emission amount", Float) = 0
 		_GlowThresh ("Glow threshold", Range(0,1)) = 0.5
+		_Dissolve ("Disolve", Range(0,1)) = 0
     }
     SubShader
     {
@@ -35,6 +36,7 @@ Shader "Custom/Rock"
 		fixed4 _EmissionColor;
 		fixed _Emission;
 		fixed _GlowThresh;
+		fixed _Dissolve;
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -48,6 +50,8 @@ Shader "Custom/Rock"
             // Albedo comes from a texture tinted by color
             fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
             o.Albedo = c.rgb;
+			//o.Albedo = fixed3(IN.uv_MainTex,0);
+			clip(c.r-_Dissolve);
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic*c.r;
             o.Smoothness = _Glossiness*c.r*2;

@@ -128,7 +128,7 @@ public class SingingBowl : MonoBehaviour
 			_sand.CacheLastPattern();
 		else
 			_sand.CacheCurPattern();
-		Rock[] rocks = FindObjectsOfType<Rock>();
+		//Rock[] rocks = FindObjectsOfType<Rock>();
 		while(timer<_spinDur){
 			timer+=Time.deltaTime;
 			theta+=_spinSpeed*Time.deltaTime;
@@ -144,14 +144,18 @@ public class SingingBowl : MonoBehaviour
 			_sand.Level(level);
 			_sand.BlendToCachedPattern(level);
 			_sand.UpdateMeshData();
+			/*
 			foreach(Rock r in rocks){
 				if(r.OnBoard())
 					r.transform.position+=Vector3.down*Time.deltaTime*_rockFallSpeed;
 			}
+			*/
 			yield return null;
 		}
+		/*
 		for(int i=rocks.Length-1; i>=0;i--)
 			rocks[i].Reset();
+			*/
 		_glowMat.SetFloat("_Emission",0);
 		_source.volume=0;
 		_source.Stop();

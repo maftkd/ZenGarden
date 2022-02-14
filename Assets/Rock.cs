@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Audio;
 
 public class Rock : MonoBehaviour
@@ -32,13 +33,18 @@ public class Rock : MonoBehaviour
 	Vector3 _startPos;
 	int _level;
 	public static bool _holding;
+	RockSpawner _spawner;
+	Renderer _renderer;
+	public bool _freshRock;
 
 	void Awake(){
 		_buffer=transform.localScale.x*0.5f;
 		_cam=Camera.main;
 		_sand=FindObjectOfType<Sand>();
-
+		_renderer=GetComponent<Renderer>();
 		_light=transform.GetComponentInChildren<Light>();
+		_spawner=FindObjectOfType<RockSpawner>();
+		_freshRock=true;
 	}
 
     // Start is called before the first frame update
@@ -76,6 +82,7 @@ public class Rock : MonoBehaviour
 					}
 				}
 				if(_charging){
+					_spawner.Charge();
 					if(!_light.enabled){
 						_light.enabled=true;
 						_parts.Play();
@@ -120,13 +127,14 @@ public class Rock : MonoBehaviour
 
 	IEnumerator Place(){
 		_state=2;
+
 		
 		//set colors
 		float z01 = _sand.GetNormalizedZ(transform.position.z);
 		_level = Mathf.FloorToInt(z01*SandAudio._instance._frequencyZones.Length);
 		float hue = _level/(float)SandAudio._instance._frequencyZones.Length;
 		Color c = Color.HSVToRGB(hue,1,1);
-		_mat=GetComponent<Renderer>().material;
+		_mat=_renderer.material;
 		_mat.SetColor("_EmissionColor",c);
 		_light.color=c;
 		_parts=transform.GetComponentInChildren<ParticleSystem>();
@@ -144,12 +152,25 @@ public class Rock : MonoBehaviour
 			transform.position=Vector3.Lerp(startPos,endPos,timer/_placeDur);
 			yield return null;
 		}
+		//play plop
 		AudioSource s = Sfx.PlayOneShot3D(_plops[_level],transform.position);
 		s.volume=_thumpVol;
-		//s.outputAudioMixerGroup = _mixer.FindMatchingGroups(_mixerName)[0];
+
+		//sand ripple
+		_sand.Ripple(transform.position);
+
+		//reset spawner
+		if(_freshRock)
+		{
+			_spawner.Reset();
+			_freshRock=false;
+		}
+		_startPos=transform.position;
+
+		//play dust
 		Transform dust = Instantiate(_dustParts,transform.position,Quaternion.identity);
-		ParticleSystem.MainModule dustMain = dust.GetComponent<ParticleSystem>().main;
-		dustMain.startColor=dustColor;
+
+		//set light pos
 		_light.transform.position=transform.position+Vector3.up*_lightOffset;
 
 		_sourceIndex = _level;
@@ -158,12 +179,19 @@ public class Rock : MonoBehaviour
 	}
 
 	void OnMouseDown(){
+		/*
+		if(_sand.IsRippling())
+			return;
+			*/
 		_state=1;
 		_holding=true;
+		_renderer.shadowCastingMode=ShadowCastingMode.On;
 		StopCharging(true);
 	}
 
 	void OnMouseUp(){
+		if(_state!=1)
+			return;
 		_holding=false;
 		//Debug.Log("stop charging");
 		StopCharging();
@@ -171,7 +199,7 @@ public class Rock : MonoBehaviour
 			StartCoroutine(Place());
 		}
 		else{
-			Reset();
+			Destroy(gameObject);
 		}
 	}
 
