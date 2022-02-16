@@ -77,7 +77,6 @@ public class Sand : MonoBehaviour
 		_cam=Camera.main;
 		_help=FindObjectOfType<Help>();
 		_spawner=FindObjectOfType<RockSpawner>();
-		_maxRippleRadius=Mathf.Sqrt(_size.x*_size.x+_size.y*_size.y)+_rippleWidth*2;
 		_rippleRadius=_maxRippleRadius;
 		//generate initial mesh
 		GenerateMesh();
@@ -719,14 +718,44 @@ public class Sand : MonoBehaviour
 	float _rippleRadius;
 	public float _rippleWidth;
 	public float _rippleRate;
-	float _maxRippleRadius;
+	public float _maxRippleRadius;
 	public float _rippleFreq;
 	float _rippleTimer;
 	public float _rippleAmp;
 	public void Ripple(Vector3 pos){
 		pos = transform.InverseTransformPoint(pos);
 		_center=new Vector2(pos.x,pos.z);
-		_rippleRadius=_rippleWidth;
+		_rippleRadius=_rippleWidth*2;
+		FlattenCenter();
+	}
+
+	void FlattenCenter(){
+		for(int z=0; z<_vertsZ;z++){
+			for(int x=0; x<_vertsX; x++){
+				int vertIndex=z*_vertsX+x;
+				Vector3 pos = _verts[vertIndex];
+				float xDiff=pos.x-_center.x;
+				float zDiff=pos.z-_center.y;
+				float rad = Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
+				if(rad<=_rippleRadius-_rippleWidth){
+					pos.y=0;
+					_verts[vertIndex]=pos;
+				}
+			}
+		}
+
+		for(int z=1;z<_vertsZ-1;z++){
+			for(int x=1;x<_vertsX-1;x++){
+				int vert=z*_vertsX+x;
+				int left=vert-1;
+				int right=vert+1;
+				int below=vert-_vertsX;
+				int above=vert+_vertsX;
+				Vector3 xDiff=_verts[right]-_verts[left];
+				Vector3 zDiff=_verts[above]-_verts[below];
+				_norms[vert]=Vector3.Cross(zDiff,xDiff);
+			}
+		}
 	}
 
 	void UpdateRipple(){
@@ -747,8 +776,29 @@ public class Sand : MonoBehaviour
 				float amp=0;
 				if(rad<=_rippleRadius&&rad>=_rippleRadius-_rippleWidth){
 					amp = Mathf.InverseLerp(_rippleRadius,_rippleRadius-_rippleWidth,rad);
-					pos.y=Mathf.Sin((_rippleTimer*Mathf.PI*2f+rad)*_rippleFreq)*_drawDepth*_rippleAmp*amp;
+					amp = Mathf.Lerp(amp,0,rad/_maxRippleRadius);
+					pos.y+=Mathf.Sin((_rippleTimer*Mathf.PI*2f+rad)*_rippleFreq)*_drawDepth*_rippleAmp*amp*Time.deltaTime;
+					pos.y=Mathf.Clamp(pos.y,-_drawDepth,_drawDepth);
 					_verts[vertIndex]=pos;
+
+					//try randomly swapping uvs
+					float maxOff=amp*(_rippleWidth/_size.x)*_vertsX;
+					int xSwap=x;
+					if(Random.value<0.5f)
+						xSwap+=Mathf.FloorToInt(maxOff*Random.value);
+					else
+						xSwap-=Mathf.FloorToInt(maxOff*Random.value);
+					int zSwap=z;
+					if(Random.value<0.5f)
+						zSwap+=Mathf.FloorToInt(maxOff*Random.value);
+					else
+						zSwap-=Mathf.FloorToInt(maxOff*Random.value);
+					if(xSwap>0&&xSwap<_vertsX&&zSwap>0&&zSwap<_vertsZ){
+						int swapIndex=zSwap*_vertsZ+xSwap;
+						float cur = _uvs[vertIndex].x;
+						_uvs[vertIndex].x=_uvs[swapIndex].x;
+						_uvs[swapIndex].x=cur;
+					}
 				}
 				else if(rad<_rippleRadius-_rippleWidth){
 					amp = _rippleRadius-_rippleWidth-rad;
@@ -757,13 +807,14 @@ public class Sand : MonoBehaviour
 					amp = 1-amp;
 					if(amp>0)
 					{
-						pos.y=Mathf.Sin((_rippleTimer*Mathf.PI*2f+rad)*_rippleFreq)*_drawDepth*amp*_rippleAmp;
-						_verts[vertIndex]=pos;
+						//pos.y=Mathf.Sin((_rippleTimer*Mathf.PI*2f+rad)*_rippleFreq)*_drawDepth*amp*_rippleAmp;
+						//_verts[vertIndex]=pos;
 					}
 				}
 				//_uvs[vertIndex]=Vector2.Lerp(_uvs[vertIndex],_uvCache[vertIndex],amount);
 			}
 		}
+
 		for(int z=1;z<_vertsZ-1;z++){
 			for(int x=1;x<_vertsX-1;x++){
 				int vert=z*_vertsX+x;

@@ -95,7 +95,7 @@ public class Rock : MonoBehaviour
 						_emission+=Time.deltaTime*_chargeRate;
 						if(_emission>_maxEmission)
 							_emission=_maxEmission;
-						_light.intensity=_emission/_maxEmission;
+						_light.intensity=_emission;
 						_mat.SetFloat("_Emission",_emission);
 					}
 				}
@@ -106,7 +106,7 @@ public class Rock : MonoBehaviour
 						_emission-=Time.deltaTime*_chargeRate;
 						if(_emission<0)
 							_emission=0;
-						_light.intensity=_emission/_maxEmission;
+						_light.intensity=_emission;
 						_mat.SetFloat("_Emission",_emission);
 					}
 					else{
@@ -186,7 +186,7 @@ public class Rock : MonoBehaviour
 		_state=1;
 		_holding=true;
 		_renderer.shadowCastingMode=ShadowCastingMode.On;
-		StopCharging(true);
+		//StopCharging(true);
 	}
 
 	void OnMouseUp(){
@@ -197,6 +197,9 @@ public class Rock : MonoBehaviour
 		StopCharging();
 		if(_sand.WithinBox(transform.position,_buffer)){
 			StartCoroutine(Place());
+		}
+		else if(_freshRock){
+			Reset();
 		}
 		else{
 			Destroy(gameObject);

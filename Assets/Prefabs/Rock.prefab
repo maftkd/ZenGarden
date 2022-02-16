@@ -5009,7 +5009,7 @@ MonoBehaviour:
   _placeDur: 0.1
   _hitAudio: {fileID: 8300000, guid: 2ce0611db5739b448b673bfd595c154c, type: 3}
   _dustParts: {fileID: 5639571807049453836, guid: aff5e988bbd87af43953bcfb83645569, type: 3}
-  _maxEmission: 2.5
+  _maxEmission: 5
   _chargeRate: 1
   _lightOffset: 1
   _plops:
@@ -5027,6 +5027,7 @@ MonoBehaviour:
   _sustainDecay: 2
   _thumpVol: 1
   _sustainVol: 1
+  _freshRock: 0
 --- !u!64 &4650931476129403684
 MeshCollider:
   m_ObjectHideFlags: 0
