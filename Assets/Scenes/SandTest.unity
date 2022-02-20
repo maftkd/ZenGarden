@@ -437,7 +437,7 @@ MonoBehaviour:
   _atmosphereVol: 0.18
   _sandDark: {r: 1, g: 0, b: 0, a: 0}
   _sandLight: {r: 0, g: 0.5632498, b: 1, a: 0}
-  _sandFallTime: 10
+  _sandFallTime: 5
   _sandParts: {fileID: 1460533187}
   _sandFadeOutDur: 0.5
   _flipDur: 2
@@ -470,7 +470,7 @@ MonoBehaviour:
   _space: {fileID: 2100000, guid: b56adc4ee4439024894cd35e00f90a72, type: 2}
   _spaceFadeDur: 5
   _sandbox: {fileID: 1098839023}
-  _skipIntro: 1
+  _skipIntro: 0
   _bowl: {fileID: 2102606037}
 --- !u!1001 &402569159
 PrefabInstance:
@@ -1018,7 +1018,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 566674187}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -6.78, y: 0.492, z: 0}
+  m_LocalPosition: {x: -6.78, y: 0.67, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7655,6 +7655,8 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 3f9203398bb6acb4f884c18aec6c5522, type: 2}
   - {fileID: 2100000, guid: 89b9dda107a73c44d9ce55f595bc1e7c, type: 2}
   - {fileID: 2100000, guid: 8ad8ac6e6ae168247bab44068f7ffe28, type: 2}
+  _crackMat: {fileID: 2100000, guid: a0040ea38d300d2478e7c0caac0cd980, type: 2}
+  _crackLerp: 2
   _rippleWidth: 0.5
   _rippleRate: 5
   _maxRippleRadius: 5

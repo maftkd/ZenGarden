@@ -29,8 +29,6 @@ public class RockSpawner : MonoBehaviour
 		_appearParts=transform.GetChild(1).GetComponent<ParticleSystem>();
 		_sfx=FindObjectOfType<Sfx>();
 
-		//instance new rock
-		CreateNewRock();
 	}
 
 	public void SetDrawVel(float v){

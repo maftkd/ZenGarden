@@ -27,8 +27,10 @@ public class Intro : MonoBehaviour
 	public GameObject _sandbox;
 	public bool _skipIntro;
 	public GameObject _bowl;
+	RockSpawner _rockSpawner;
 
 	void Awake(){
+		_rockSpawner=FindObjectOfType<RockSpawner>();
 		if(!_skipIntro){
 			_sandSound=_sa.GenerateSound(_sandAudioFreq);
 			_sandSound.transform.SetParent(transform);
@@ -50,6 +52,7 @@ public class Intro : MonoBehaviour
 			_bowl.SetActive(true);
 			_music.StartPlaying();
 			_atmosphere.volume=1f;
+			_rockSpawner.Reset();
 			return;
 		}
 
@@ -135,6 +138,7 @@ public class Intro : MonoBehaviour
 		}
 
 		_sandParts.Stop();
+		_sandParts.gameObject.SetActive(false);
 		_overlay.alpha=1f;
 		bot.enabled=false;
 		top.enabled=false;
@@ -142,6 +146,7 @@ public class Intro : MonoBehaviour
 		_buttCover.alpha=0f;
 		_sandbox.SetActive(true);
 		_bowl.SetActive(true);
+		_rockSpawner.Reset();
 
 		timer=0;
 		while(timer<_fadeInDur){
