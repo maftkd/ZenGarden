@@ -12,6 +12,7 @@ Shader "Custom/CrackGlow"
 		_IntenseColor ("Intense Color", Color) = (1,1,1,1)
 		_Intensity ("Intensity", Range(0,1)) = 0.5
 		_GlowIntensity ("Glow intensity", Float) = 2
+		_GlowPos ("Glow Position", Vector) = (0.5,0.5,0,0)
     }
     SubShader
     {
@@ -42,6 +43,7 @@ Shader "Custom/CrackGlow"
 		fixed4 _IntenseColor;
 		fixed _Intensity;
 		fixed _GlowIntensity;
+		fixed4 _GlowPos;
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -53,6 +55,7 @@ Shader "Custom/CrackGlow"
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
 			fixed noise = tex2D(_MainTex,IN.uv_MainTex-fixed2(1,1)*_Time.x*_GlowParams.z).r;
+			/*
 			fixed r = 0.5;
 			fixed2 center = fixed2(0.5,0.5);
 			fixed2 diff = IN.uv_MainTex-center;
@@ -61,11 +64,24 @@ Shader "Custom/CrackGlow"
 			fixed fLerp = 1-step(fAngle,theta);
 			fLerp*=noise;
 			fLerp*=smoothstep(_GlowParams.x,_GlowParams.y,IN.worldPos.y);
+			*/
+			fixed fLerp=smoothstep(_GlowParams.x,_GlowParams.y,IN.worldPos.y)*noise;
+
             // Albedo comes from a texture tinted by color
 			fixed intensity=(sin(_Time.y*_GlowParams.w)+1)*0.5;
 			fixed4 col = lerp(_GlowColor,_IntenseColor,_Intensity*intensity);
             o.Albedo = lerp(_Color.rgb,col.rgb,fLerp);
-			o.Emission=fLerp*col.rgb*_GlowIntensity;
+
+			fixed xStrength=1-abs(_GlowPos.x-IN.uv_MainTex.x);
+			fixed yStrength=1-abs(_GlowPos.y-IN.uv_MainTex.y);
+			xStrength=saturate(xStrength-0.5);
+			yStrength=saturate(yStrength-0.5);
+			fixed posStrength=xStrength*yStrength;
+
+			fixed glowIntensity=_GlowIntensity+posStrength*20;
+
+			o.Emission=fLerp*col.rgb*glowIntensity;
+			//o.Emission=fixed3(IN.uv_MainTex,0)*5;
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;

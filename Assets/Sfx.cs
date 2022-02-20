@@ -27,6 +27,17 @@ public class Sfx : MonoBehaviour
 		Destroy(foobar,clip.length);
 	}
 
+	public void PlayOneShot2D(AudioClip clip,float vol){
+		GameObject foobar = new GameObject("One shot audio");
+		AudioSource audio = foobar.AddComponent<AudioSource>();
+		audio.volume=vol;
+		audio.clip=clip;
+		if(clip.name.Contains("JTUBA"))
+			audio.volume=0.13f;
+		audio.Play();
+		Destroy(foobar,clip.length);
+	}
+
 	public static AudioSource PlayOneShot3D(AudioClip clip,Vector3 pos){
 		GameObject foobar = new GameObject("One shot audio");
 		foobar.transform.position=pos;

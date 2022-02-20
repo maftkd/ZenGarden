@@ -128,7 +128,6 @@ public class Rock : MonoBehaviour
 	IEnumerator Place(){
 		_state=2;
 
-		
 		//set colors
 		float z01 = _sand.GetNormalizedZ(transform.position.z);
 		_level = Mathf.FloorToInt(z01*SandAudio._instance._frequencyZones.Length);
@@ -185,7 +184,6 @@ public class Rock : MonoBehaviour
 			*/
 		_state=1;
 		_holding=true;
-		_renderer.shadowCastingMode=ShadowCastingMode.On;
 		//StopCharging(true);
 	}
 

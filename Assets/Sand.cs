@@ -56,8 +56,11 @@ public class Sand : MonoBehaviour
 
 	Help _help;
 
-	//progress
-	RockSpawner _spawner;
+	//crack glow
+	public Material _crackMat;
+	Vector2 _curPos;
+	Vector2 _targetPos;
+	public float _crackLerp;
 
 	void Awake(){
 		Init();
@@ -76,8 +79,10 @@ public class Sand : MonoBehaviour
 		_meshR=GetComponent<MeshRenderer>();
 		_cam=Camera.main;
 		_help=FindObjectOfType<Help>();
-		_spawner=FindObjectOfType<RockSpawner>();
 		_rippleRadius=_maxRippleRadius;
+		_curPos=Vector2.one*0.5f;
+		_targetPos=_curPos;
+		_crackMat.SetVector("_GlowPos",new Vector4(_curPos.x,_curPos.y,0,0));
 		//generate initial mesh
 		GenerateMesh();
 		LoadPattern(0);
@@ -351,7 +356,10 @@ public class Sand : MonoBehaviour
 					float zDiff=diff.z/_size.y;
 					float normDist=Mathf.Sqrt(xDiff*xDiff+zDiff*zDiff);
 					float vel = normDist/Time.deltaTime;
-					_spawner.SetDrawVel(vel);
+					//todo - set the crack mat stuff
+					float xNorm = Mathf.InverseLerp(_xMin,_xMax,_hitPos.x);
+					float zNorm = Mathf.InverseLerp(_zMin,_zMax,_hitPos.z);
+					_targetPos=new Vector2(xNorm,zNorm);
 					float targetV=vel/_maxVel;
 					_sandAudio.SetTargetVolume(targetV);
 					_drawDir=new Vector2(xDiff,zDiff);
@@ -398,14 +406,18 @@ public class Sand : MonoBehaviour
 					_penDown=false;
 			}
 		}
-		else if(!Rake._raking)
-			_sandAudio.SetTargetVolume(0);
+		else{
+			_targetPos=Vector2.one*0.5f;
+		}
 		//else
 			//_audio.volume=Mathf.Lerp(_audio.volume,0,_audioGravity*Time.deltaTime);
 
 		if(_rippleRadius<_maxRippleRadius){
 			UpdateRipple();
 		}
+
+		_curPos=Vector2.Lerp(_curPos,_targetPos,_crackLerp*Time.deltaTime);
+		_crackMat.SetVector("_GlowPos",new Vector4(_curPos.x,_curPos.y,0,0));
     }
 
 	void LateUpdate(){
@@ -727,6 +739,10 @@ public class Sand : MonoBehaviour
 		_center=new Vector2(pos.x,pos.z);
 		_rippleRadius=_rippleWidth*2;
 		FlattenCenter();
+
+		float xNorm = Mathf.InverseLerp(_xMin,_xMax,pos.x);
+		float zNorm = Mathf.InverseLerp(_zMin,_zMax,pos.z);
+		_curPos=new Vector2(xNorm,zNorm);
 	}
 
 	void FlattenCenter(){
