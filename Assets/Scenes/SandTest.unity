@@ -470,7 +470,7 @@ MonoBehaviour:
   _space: {fileID: 2100000, guid: b56adc4ee4439024894cd35e00f90a72, type: 2}
   _spaceFadeDur: 5
   _sandbox: {fileID: 1098839023}
-  _skipIntro: 0
+  _skipIntro: 1
   _bowl: {fileID: 2102606037}
 --- !u!1001 &402569159
 PrefabInstance:

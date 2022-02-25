@@ -408,6 +408,7 @@ public class Sand : MonoBehaviour
 		}
 		else{
 			_targetPos=Vector2.one*0.5f;
+			_sandAudio.SetTargetVolume(0);
 		}
 		//else
 			//_audio.volume=Mathf.Lerp(_audio.volume,0,_audioGravity*Time.deltaTime);
@@ -734,9 +735,10 @@ public class Sand : MonoBehaviour
 	public float _rippleFreq;
 	float _rippleTimer;
 	public float _rippleAmp;
-	public void Ripple(Vector3 pos){
+	public void Ripple(Vector3 pos, float rad){
 		pos = transform.InverseTransformPoint(pos);
 		_center=new Vector2(pos.x,pos.z);
+		_maxRippleRadius=rad*1.25f;
 		_rippleRadius=_rippleWidth*2;
 		FlattenCenter();
 

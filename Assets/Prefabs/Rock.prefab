@@ -5028,6 +5028,11 @@ MonoBehaviour:
   _thumpVol: 1
   _sustainVol: 1
   _freshRock: 0
+  _ringWidth: 0.1
+  _minRadius: 0.5
+  _maxRadius: 4
+  _ringFreq: 0.5
+  _fallGrav: 40
 --- !u!64 &4650931476129403684
 MeshCollider:
   m_ObjectHideFlags: 0

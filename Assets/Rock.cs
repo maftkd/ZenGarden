@@ -37,6 +37,18 @@ public class Rock : MonoBehaviour
 	Renderer _renderer;
 	public bool _freshRock;
 
+	//animating ring
+	[Header("Animated ring")]
+	public float _ringWidth;
+	public float _minRadius;
+	public float _maxRadius;
+	Material _sandMat;
+	Vector4 _ringVec;
+	float _ringTimer;
+	public float _ringFreq;
+
+	public float _fallGrav;
+
 	void Awake(){
 		_buffer=transform.localScale.x*0.5f;
 		_cam=Camera.main;
@@ -44,6 +56,7 @@ public class Rock : MonoBehaviour
 		_renderer=GetComponent<Renderer>();
 		_light=transform.GetComponentInChildren<Light>();
 		_spawner=FindObjectOfType<RockSpawner>();
+		_sandMat=_sand.GetComponent<MeshRenderer>().material;
 		_freshRock=true;
 	}
 
@@ -67,6 +80,12 @@ public class Rock : MonoBehaviour
 				float z = r.origin.z+t*r.direction.z;
 				Vector3 worldSpaceHit=new Vector3(x,_projectHeight,z);
 				transform.position=worldSpaceHit;
+				//set sand vector
+				Vector3 local = _sand.transform.InverseTransformPoint(worldSpaceHit);
+				_ringTimer+=Time.deltaTime;
+				float rad = Mathf.Lerp(_minRadius,_maxRadius,(Mathf.Sin(_ringTimer*Mathf.PI*2f*_ringFreq-Mathf.PI*0.3f)+1f)*0.5f);
+				_ringVec = new Vector4(local.x,local.z,rad,_ringWidth);
+				_sandMat.SetVector("_DropVec",_ringVec);
 				break;
 			case 2://thumping
 				break;
@@ -127,6 +146,9 @@ public class Rock : MonoBehaviour
 
 	IEnumerator Place(){
 		_state=2;
+		float rad = _ringVec.z;
+		_ringVec = Vector4.zero;
+		_sandMat.SetVector("_DropVec",_ringVec);
 
 		//set colors
 		float z01 = _sand.GetNormalizedZ(transform.position.z);
@@ -156,7 +178,7 @@ public class Rock : MonoBehaviour
 		s.volume=_thumpVol;
 
 		//sand ripple
-		_sand.Ripple(transform.position);
+		_sand.Ripple(transform.position,rad);
 
 		//reset spawner
 		if(_freshRock)
@@ -178,13 +200,12 @@ public class Rock : MonoBehaviour
 	}
 
 	void OnMouseDown(){
-		/*
-		if(_sand.IsRippling())
-			return;
-			*/
 		_state=1;
 		_holding=true;
-		//StopCharging(true);
+		//set sand vec
+		_ringVec = new Vector4(-1f,0f,0f,0.02f);
+		_ringTimer=0f;
+		_sandMat.SetVector("_DropVec",_ringVec);
 	}
 
 	void OnMouseUp(){
@@ -200,7 +221,7 @@ public class Rock : MonoBehaviour
 			Reset();
 		}
 		else{
-			Destroy(gameObject);
+			StartCoroutine(FallToTheAbyss());
 		}
 	}
 
@@ -259,5 +280,19 @@ public class Rock : MonoBehaviour
 
 	public bool OnBoard(){
 		return _state==3;
+	}
+
+	IEnumerator FallToTheAbyss(){
+		float vel=0;
+		_state=4;
+		_ringVec = Vector4.zero;
+		_sandMat.SetVector("_DropVec",_ringVec);
+		enabled=false;
+		while(transform.position.y>-30f){
+			vel+=_fallGrav*Time.deltaTime;
+			transform.position+=Vector3.down*vel*Time.deltaTime;
+			yield return null;
+		}
+		Destroy(gameObject);
 	}
 }
