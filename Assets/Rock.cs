@@ -217,12 +217,17 @@ public class Rock : MonoBehaviour
 		if(_sand.WithinBox(transform.position,_buffer)){
 			StartCoroutine(Place());
 		}
+		else{
+			StartCoroutine(FallToTheAbyss());
+		}
+		/*
 		else if(_freshRock){
 			Reset();
 		}
 		else{
 			StartCoroutine(FallToTheAbyss());
 		}
+		*/
 	}
 
 	public void Reset(){
@@ -284,6 +289,11 @@ public class Rock : MonoBehaviour
 
 	IEnumerator FallToTheAbyss(){
 		float vel=0;
+		if(_freshRock)
+		{
+			_spawner.Reset();
+			_freshRock=false;
+		}
 		_state=4;
 		_ringVec = Vector4.zero;
 		_sandMat.SetVector("_DropVec",_ringVec);
