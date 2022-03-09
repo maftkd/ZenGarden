@@ -28,7 +28,7 @@ public class Rock : MonoBehaviour
 	AudioSource _source;
 	public float _sustainDecay;
 	int _sourceIndex;
-	public float _thumpVol;
+	public Vector2 _thumpVolRange;
 	public float _sustainVol;
 	Vector3 _startPos;
 	int _level;
@@ -46,8 +46,10 @@ public class Rock : MonoBehaviour
 	Vector4 _ringVec;
 	float _ringTimer;
 	public float _ringFreq;
-
 	public float _fallGrav;
+
+	//excitement
+	bool _excited;
 
 	void Awake(){
 		_buffer=transform.localScale.x*0.5f;
@@ -175,10 +177,11 @@ public class Rock : MonoBehaviour
 		}
 		//play plop
 		AudioSource s = Sfx.PlayOneShot3D(_plops[_level],transform.position);
-		s.volume=_thumpVol;
+		float rad01 = Mathf.InverseLerp(_minRadius,_maxRadius,rad);
+		s.volume=Mathf.Lerp(_thumpVolRange.x,_thumpVolRange.y,rad01);
 
 		//sand ripple
-		_sand.Ripple(transform.position,rad);
+		_sand.Ripple(transform.position,rad,this);
 
 		//reset spawner
 		if(_freshRock)
@@ -304,5 +307,17 @@ public class Rock : MonoBehaviour
 			yield return null;
 		}
 		Destroy(gameObject);
+	}
+
+	public void GetExcitedBy(Rock other){
+		if(_excited)
+			return;
+		_excited=true;
+		//currently ignoring other, but could use it
+		StartCoroutine(EmitAirborneWave());
+	}
+
+	IEnumerator EmitAirborneWave(){
+		yield return null;
 	}
 }

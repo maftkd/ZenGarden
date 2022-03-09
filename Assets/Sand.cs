@@ -80,6 +80,7 @@ public class Sand : MonoBehaviour
 		_cam=Camera.main;
 		_help=FindObjectOfType<Help>();
 		_rippleRadius=_maxRippleRadius;
+		_colliders = new Collider[5];
 		_curPos=Vector2.one*0.5f;
 		_targetPos=_curPos;
 		_crackMat.SetVector("_GlowPos",new Vector4(_curPos.x,_curPos.y,0,0));
@@ -735,7 +736,10 @@ public class Sand : MonoBehaviour
 	public float _rippleFreq;
 	float _rippleTimer;
 	public float _rippleAmp;
-	public void Ripple(Vector3 pos, float rad){
+	Collider [] _colliders;
+	Rock _dropRock;
+	public void Ripple(Vector3 pos, float rad, Rock dropRock){
+		_dropRock=dropRock;
 		pos = transform.InverseTransformPoint(pos);
 		_center=new Vector2(pos.x,pos.z);
 		_maxRippleRadius=rad*1.25f;
@@ -818,18 +822,6 @@ public class Sand : MonoBehaviour
 						_uvs[swapIndex].x=cur;
 					}
 				}
-				else if(rad<_rippleRadius-_rippleWidth){
-					amp = _rippleRadius-_rippleWidth-rad;
-					if(amp>1f)
-						amp=1f;
-					amp = 1-amp;
-					if(amp>0)
-					{
-						//pos.y=Mathf.Sin((_rippleTimer*Mathf.PI*2f+rad)*_rippleFreq)*_drawDepth*amp*_rippleAmp;
-						//_verts[vertIndex]=pos;
-					}
-				}
-				//_uvs[vertIndex]=Vector2.Lerp(_uvs[vertIndex],_uvCache[vertIndex],amount);
 			}
 		}
 
@@ -843,6 +835,20 @@ public class Sand : MonoBehaviour
 				Vector3 xDiff=_verts[right]-_verts[left];
 				Vector3 zDiff=_verts[above]-_verts[below];
 				_norms[vert]=Vector3.Cross(zDiff,xDiff);
+			}
+		}
+
+		//check for any rocks 
+		Vector3 centerWorld = transform.TransformPoint(_center);
+		int cols = Physics.OverlapSphereNonAlloc(centerWorld,_rippleRadius,_colliders);
+		for(int i=0;i<cols;i++){
+			if(_colliders[i].transform!=_dropRock.transform)
+			{
+				Rock r = _colliders[i].GetComponent<Rock>();
+				if(r!=null&&!r._freshRock){
+					r.GetExcitedBy(_dropRock);
+					Debug.Log("hit: "+_colliders[i].name);
+				}
 			}
 		}
 	}

@@ -5025,7 +5025,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 3ce1aabe86dfc874aa22de860ca2bdb4, type: 3}
   - {fileID: 8300000, guid: 2dfaafe480b0d584693d97bff3ea4c12, type: 3}
   _sustainDecay: 2
-  _thumpVol: 1
+  _thumpVolRange: {x: 0.01, y: 1}
   _sustainVol: 1
   _freshRock: 0
   _ringWidth: 0.1

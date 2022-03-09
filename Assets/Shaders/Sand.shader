@@ -71,6 +71,8 @@ Shader "Custom/Sand"
 			fixed onEdge=step(abs(dist-_DropVec.z),_DropVec.w);
 			fixed ring = smoothstep(0,_DropVec.z,dist)*inRing*0.25;
 			o.Emission=_RingColor.rgb*onEdge*ringN;//+(1-onEdge)*ring*fixed3(1,1,1);
+			/*
+			*/
             // Metallic and smoothness come from slider variables
             o.Alpha = c.a;
         }
