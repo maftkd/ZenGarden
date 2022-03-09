@@ -12,15 +12,16 @@ Shader "Custom/RingWave"
 		_WaveFreq ("Wave frequency", Float) = 2
 		_WaveAmp ("Wave amplitude", Range(0,1)) = 0.1
 		_WaveWave ("Wave wave", Float) = 2
+		_AlphaMult ("Alpha mult", Float) = 2
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Opaque""Queue"="Geometry" }
         LOD 200
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard addshadow 
+        #pragma surface surf Standard addshadow
 
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
@@ -41,6 +42,7 @@ Shader "Custom/RingWave"
 		fixed _WaveFreq;
 		fixed _WaveAmp;
 		fixed _WaveWave;
+		fixed _AlphaMult;
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -58,21 +60,22 @@ Shader "Custom/RingWave"
 			fixed2 diff = center-IN.uv_MainTex;
 			fixed dSqr=dot(diff,diff);
 			fixed t = atan2(diff.y,diff.x);
-			fixed r = _Radius+sin(t*_WaveFreq)*_WaveAmp*sin(_Time.z*_WaveWave);
+			fixed r = _Radius+sin(t*_WaveFreq)*_Radius*0.5*_WaveAmp*sin(_Time.z*_WaveWave);
 
 			fixed dDiff=abs(r-sqrt(dSqr));
 			fixed ringThickness=_RingParams.z;
 			fixed inRing=step(0,ringThickness-dDiff);
 			//fixed metal = n*
-			//clip(inRing-0.9-n*_NoiseCutoff);
+			//o.Alpha=ringThickness-dDiff+n*_NoiseCutoff;
+			//clip(ringThickness-dDiff+n*_NoiseCutoff);
 			clip(ringThickness-dDiff-n*_NoiseCutoff);
 
-            o.Albedo = c.rgb;
+            o.Albedo = c.rgb*_RingParams.w;
 			//o.Emission=c.rgb*_EmissionMult;
             // Metallic and smoothness come from slider variables
-            o.Metallic = 0.1;
-            o.Smoothness = 0.1;
-            o.Alpha = 1;
+            o.Metallic = 0;
+            o.Smoothness = 0;
+			o.Alpha=1;
         }
         ENDCG
     }

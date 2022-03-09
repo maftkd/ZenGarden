@@ -846,8 +846,7 @@ public class Sand : MonoBehaviour
 			{
 				Rock r = _colliders[i].GetComponent<Rock>();
 				if(r!=null&&!r._freshRock){
-					r.GetExcitedBy(_dropRock);
-					Debug.Log("hit: "+_colliders[i].name);
+					r.GetExcitedBy(_dropRock,null);
 				}
 			}
 		}
@@ -856,6 +855,18 @@ public class Sand : MonoBehaviour
 	public bool IsRippling(){
 		return _rippleRadius<_maxRippleRadius*0.5f;
 
+	}
+
+	public Vector2 WorldToNormalizedCoords(Vector3 world){
+		Vector3 pos = transform.InverseTransformPoint(world);
+		float xNorm = Mathf.InverseLerp(_xMin,_xMax,pos.x);
+		float zNorm = Mathf.InverseLerp(_zMin,_zMax,pos.z);
+		return new Vector2(xNorm,zNorm);
+	}
+
+	public float GetRemainingRippleTime(){
+		float radDiff=_maxRippleRadius-_rippleRadius;
+		return radDiff/_rippleRate;
 	}
 
 	void OnDrawGizmos(){

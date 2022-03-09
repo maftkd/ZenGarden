@@ -49,7 +49,10 @@ public class Rock : MonoBehaviour
 	public float _fallGrav;
 
 	//excitement
-	bool _excited;
+	List<Wave> _excitedWaves;
+	Rock _excitedRock;
+
+	public Transform _wave;
 
 	void Awake(){
 		_buffer=transform.localScale.x*0.5f;
@@ -59,6 +62,7 @@ public class Rock : MonoBehaviour
 		_light=transform.GetComponentInChildren<Light>();
 		_spawner=FindObjectOfType<RockSpawner>();
 		_sandMat=_sand.GetComponent<MeshRenderer>().material;
+		_excitedWaves = new List<Wave>();
 		_freshRock=true;
 	}
 
@@ -215,7 +219,6 @@ public class Rock : MonoBehaviour
 		if(_state!=1)
 			return;
 		_holding=false;
-		//Debug.Log("stop charging");
 		StopCharging();
 		if(_sand.WithinBox(transform.position,_buffer)){
 			StartCoroutine(Place());
@@ -238,26 +241,6 @@ public class Rock : MonoBehaviour
 		_state=0;
 		StopCharging(true);
 	}
-
-	/*
-	void OnMouseEnter(){
-		if(Input.GetMouseButton(0))
-		{
-			_charging=true;
-		}
-		else
-		{
-			//Debug.Log("stop charging");
-			StopCharging();
-		}
-	}
-	*/
-
-	/*
-	void OnMouseExit(){
-		StopCharging();
-	}
-	*/
 
 	void StopCharging(bool fast=false){
 		_charging=false;
@@ -309,15 +292,44 @@ public class Rock : MonoBehaviour
 		Destroy(gameObject);
 	}
 
-	public void GetExcitedBy(Rock other){
-		if(_excited)
-			return;
-		_excited=true;
+	public void GetExcitedBy(Rock other,Wave otherWave){
+		if(other!=null)
+		{
+			if(other==_excitedRock)
+				return;
+			_excitedRock=other;
+		}
+		else if(otherWave!=null){
+			if(_excitedWaves.Contains(otherWave))
+			{
+				return;
+			}
+		}
+
 		//currently ignoring other, but could use it
-		StartCoroutine(EmitAirborneWave());
+		StartCoroutine(EmitAirborneWave(other,otherWave));
 	}
 
-	IEnumerator EmitAirborneWave(){
+	IEnumerator EmitAirborneWave(Rock other,Wave otherWave){
+		if(otherWave!=null)
+		{
+			_excitedWaves.Add(otherWave);
+			otherWave._onDestroy+=CullOldWaves;
+		}
+		Transform waveT = Instantiate(_wave);
+		Wave wave = waveT.GetComponent<Wave>();
+		_excitedWaves.Add(wave);
+		wave.Init(transform.position,this,otherWave);
 		yield return null;
+		if(other!=null)
+		{
+			float dur = _sand.GetRemainingRippleTime();
+			yield return new WaitForSeconds(dur);
+			_excitedRock=null;
+		}
+	}
+
+	public void CullOldWaves(Wave wave){
+		_excitedWaves.Remove(wave);
 	}
 }

@@ -5033,6 +5033,7 @@ MonoBehaviour:
   _maxRadius: 4
   _ringFreq: 0.5
   _fallGrav: 40
+  _wave: {fileID: 4748344320283791598, guid: 0e19910d20fcd410fae92c18d39f35fa, type: 3}
 --- !u!64 &4650931476129403684
 MeshCollider:
   m_ObjectHideFlags: 0
