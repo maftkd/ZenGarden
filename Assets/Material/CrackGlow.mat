@@ -81,6 +81,6 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GlowColor: {r: 0.32452828, g: 0.9682131, b: 1, a: 1}
     - _GlowParams: {r: 0.6, g: 0.25, b: 0.5, a: 1.75}
-    - _GlowPos: {r: 0.5000014, g: 0.5000014, b: 0, a: 0}
+    - _GlowPos: {r: 0.5, g: 0.5, b: 0, a: 0}
     - _IntenseColor: {r: 1, g: 0.624, b: 0.624, a: 1}
   m_BuildTextureStacks: []
