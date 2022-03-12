@@ -329,6 +329,10 @@ public class Rock : MonoBehaviour
 		}
 	}
 
+	public bool IsPlaced(){
+		return _state==3;
+	}
+
 	public void CullOldWaves(Wave wave){
 		_excitedWaves.Remove(wave);
 	}

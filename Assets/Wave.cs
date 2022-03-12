@@ -6,6 +6,7 @@ public class Wave : MonoBehaviour
 {
 	Material _mat;
 	Vector4 _ringVec;
+	Vector3 _center;
 	float _radius;
 	public float _growRate;
 	public float _decayRate;
@@ -20,6 +21,7 @@ public class Wave : MonoBehaviour
 	public void Init(Vector3 worldPos, Rock r, Wave source){
 		_mat=GetComponent<Renderer>().material;
 		Sand sand = FindObjectOfType<Sand>();
+		_center = worldPos;
 		Vector2 coords = sand.WorldToNormalizedCoords(worldPos);
 		_ringVec=_mat.GetVector("_RingParams");
 		_ringVec.x=1-coords.x;
@@ -55,12 +57,12 @@ public class Wave : MonoBehaviour
 			Destroy(gameObject);
 		}
 		else{
-			int cols = Physics.OverlapSphereNonAlloc(transform.position,_radius*10,_colliders);
+			int cols = Physics.OverlapSphereNonAlloc(_center,_radius*10,_colliders);
 			for(int i=0;i<cols;i++){
 				if(_colliders[i].transform!=transform)
 				{
 					Rock r = _colliders[i].GetComponent<Rock>();
-					if(r!=null&&!r._freshRock){
+					if(r!=null&&!r._freshRock&&r.IsPlaced()){
 						r.GetExcitedBy(null,this);
 					}
 				}
